@@ -2,18 +2,22 @@ import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
 import { token } from './config.json';
 import fs from 'fs';
 import path from 'path';
+import { GameManager } from "./core/GameManager";
 
 declare module 'discord.js' {
   interface Client {
     commands: Collection<string, any>;
+    gameManager: GameManager;
   }
 }
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
+const gameManager = new GameManager();
 
 client.commands = new Collection();
+client.gameManager = gameManager;
 
 /* Load commands */
 const commandsPath = path.join(__dirname, 'bot/commands');

@@ -1,11 +1,12 @@
-import { REST, Routes, SlashCommandBuilder } from 'discord.js';
-import { token } from './config.json';
+import { REST, Routes } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
+import config from './config.json';
+
+const { token, clientId, guildId } = config;
 
 const commands: any[] = [];
 
-// Charger toutes les commandes
 const commandsPath = path.join(__dirname, 'bot/commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
 
@@ -16,19 +17,19 @@ for (const file of commandFiles) {
 
 const rest = new REST({ version: '10' }).setToken(token);
 
-async function deployCommands() {
+async function deploy() {
     try {
-        console.log('Déploiement des commandes...');
+        console.log("Déploiement des commandes...");
 
         await rest.put(
-            Routes.applicationCommands(require('./config.json').clientId),
+            Routes.applicationGuildCommands(clientId, guildId),
             { body: commands }
         );
 
-        console.log('Commandes déployées !');
-    } catch (error) {
-        console.error(error);
+        console.log("Commandes déployées !");
+    } catch (err) {
+        console.error(err);
     }
 }
 
-deployCommands();
+deploy();
