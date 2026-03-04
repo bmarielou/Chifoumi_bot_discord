@@ -8,6 +8,7 @@ export class Game {
     players: Player[] = [];
     state: GameState;
     deck!: Deck;
+    currentPlayerIndex: number = 0;
 
     constructor(channelId: string) {
         this.channelId = channelId;
@@ -44,5 +45,31 @@ export class Game {
             player.addCard(this.deck.draw()!);
             player.addCard(this.deck.draw()!);
         }
+    }
+
+    getCurrentPlayer(): Player {
+        return this.players[this.currentPlayerIndex];
+    }
+
+    nextTurn() {
+        this.currentPlayerIndex =
+            (this.currentPlayerIndex + 1) % this.players.length;
+    }
+
+    income(playerId: string) {
+
+        if (this.state !== GameState.STARTED) {
+            throw new Error("La partie n'a pas commencé.");
+        }
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            throw new Error("Ce n'est pas votre tour.");
+        }
+        currentPlayer.coins += 1;
+
+        this.nextTurn();
+
+        return currentPlayer;
     }
 }
