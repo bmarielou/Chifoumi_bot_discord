@@ -21,8 +21,15 @@ export async function execute(interaction: any) {
     try {
         game.startGame();
 
-        await interaction.reply("La partie se lance");
-    } catch (error: any) {
+        for (const player of game.players) {
+            const user = await interaction.client.users.fetch(player.id);
+
+            await user.send(
+                `Tes cartes sont :\n- ${player.cards[0]}\n- ${player.cards[1]}`
+            );
+        }
+        await interaction.reply("La partie commence.");
+        } catch (error: any) {
         await interaction.reply({
             content: `${error.message}`,
             ephemeral: true
