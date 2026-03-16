@@ -108,28 +108,77 @@ export class Game {
         }
 
         const challengedPlayer = this.players.find(p => p.id === this.lastPlayerId);
+        const challenger = this.players.find(p => p.id === challengerId); // <-- important
 
-        if (!challengedPlayer) {
+        if (!challengedPlayer || !challenger) {
             throw new Error("Joueur introuvable.");
         }
 
+        // Challenge sur Duke (TAX)
         if (this.lastAction === ActionType.TAX) {
-
             const hasDuke = challengedPlayer.cards.includes(CardType.DUKE);
 
             if (hasDuke) {
+                const lostCard = challenger.loseInfluence();
                 return {
                     result: "challenge_failed",
-                    player: challengedPlayer
+                    lostCard,
+                    message: `${challenger.id} a perdu une influence ! (Duke confirmé)`
                 };
             } else {
+                const lostCard = challengedPlayer.loseInfluence();
                 return {
                     result: "challenge_success",
-                    player: challengedPlayer
+                    lostCard,
+                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
                 };
             }
         }
 
+        // Challenge sur Assassin (ASSASSINATE)
+        if (this.lastAction === ActionType.ASSASSINATE) {
+            const hasAssassin = challengedPlayer.cards.includes(CardType.ASSASSIN);
+
+            if (hasAssassin) {
+                const lostCard = challenger.loseInfluence();
+                return {
+                    result: "challenge_failed",
+                    lostCard,
+                    message: `${challenger.id} a perdu une influence ! (Assassin confirmé)`
+                };
+            } else {
+                const lostCard = challengedPlayer.loseInfluence();
+                return {
+                    result: "challenge_success",
+                    lostCard,
+                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                };
+            }
+        }
+
+        // Challenge sur Contessa (BLOCK_ASSASSINATION)
+        if (this.lastAction === ActionType.BLOCK_ASSASSINATION) {
+            const hasContessa = challengedPlayer.cards.includes(CardType.CONTESSA);
+
+            if (hasContessa) {
+                const lostCard = challenger.loseInfluence();
+                return {
+                    result: "challenge_failed",
+                    lostCard,
+                    message: `${challenger.id} a perdu une influence ! (Contessa confirmée)`
+                };
+            } else {
+                const lostCard = challengedPlayer.loseInfluence();
+                return {
+                    result: "challenge_success",
+                    lostCard,
+                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                };
+            }
+        }
+
+        // Si l’action n’est pas contestable
+        throw new Error("Action non contestable.");
     }
 
     assassinate(playerId: string, targetId: string) {
