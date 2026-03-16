@@ -2,7 +2,9 @@ import { Game } from "./Game";
 
 export class GameManager {
 
+    currentGame: Game | null = null;
     private games: Map<string, Game> = new Map();
+    
 
     //Create new game in canal
     createGame(channelId: string, creatorId: string): Game {

@@ -13,6 +13,7 @@ export class Game {
     currentPlayerIndex: number = 0;
     lastAction: ActionType | null = null;
     lastPlayerId: string | null = null;
+    lastTargetId: string | null = null;
 
     constructor(channelId: string) {
         this.channelId = channelId;
@@ -114,7 +115,7 @@ export class Game {
             throw new Error("Joueur introuvable.");
         }
 
-        // Challenge sur Duke (TAX)
+        // Challenge Duke
         if (this.lastAction === ActionType.TAX) {
             const hasDuke = challengedPlayer.cards.includes(CardType.DUKE);
 
@@ -135,7 +136,7 @@ export class Game {
             }
         }
 
-        // Challenge sur Assassin (ASSASSINATE)
+        // Challenge Assassin
         if (this.lastAction === ActionType.ASSASSINATE) {
             const hasAssassin = challengedPlayer.cards.includes(CardType.ASSASSIN);
 
@@ -156,7 +157,7 @@ export class Game {
             }
         }
 
-        // Challenge sur Contessa (BLOCK_ASSASSINATION)
+        // Challenge Contessa
         if (this.lastAction === ActionType.BLOCK_ASSASSINATION) {
             const hasContessa = challengedPlayer.cards.includes(CardType.CONTESSA);
 
@@ -177,7 +178,30 @@ export class Game {
             }
         }
 
-        // Si l’action n’est pas contestable
+        // Challenge sur Captain (STEAL)
+        if (this.lastAction === ActionType.STEAL) {
+            const hasCaptain = challengedPlayer.cards.includes(CardType.CAPTAIN);
+
+            if (hasCaptain) {
+                // Challenge échoué → challenger perd une carte
+                const lostCard = challenger.loseInfluence();
+                return {
+                    result: "challenge_failed",
+                    lostCard,
+                    message: `${challenger.id} a perdu une influence ! (Captain confirmé)`
+                };
+            } else {
+                // Challenge réussi → joueur bluffeur perd une carte
+                const lostCard = challengedPlayer.loseInfluence();
+                return {
+                    result: "challenge_success",
+                    lostCard,
+                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                };
+            }
+        }
+
+        // If action not challenger
         throw new Error("Action non contestable.");
     }
 
@@ -235,6 +259,45 @@ export class Game {
         this.lastPlayerId = playerId;
 
         return target;
+    }
+
+    steal(playerId: string, targetId: string) {
+        const player = this.players.find(p => p.id === playerId);
+        const target = this.players.find(p => p.id === targetId);
+
+        if (!player || !target) throw new Error("Joueur introuvable.");
+
+        if (this.state !== GameState.STARTED) throw new Error("La partie n'a pas commencé.");
+
+        if (target.coins < 2) {
+            const stolen = target.coins;
+            target.coins = 0;
+            player.coins += stolen;
+            this.lastAction = ActionType.STEAL;
+            this.lastPlayerId = playerId;
+            this.lastTargetId = targetId;
+            return stolen;
+        } else {
+            target.coins -= 2;
+            player.coins += 2;
+            this.lastAction = ActionType.STEAL;
+            this.lastPlayerId = playerId;
+            this.lastTargetId = targetId;
+            return 2;
+        }
+    }
+
+    blockSteal(playerId: string) {
+        const player = this.players.find(p => p.id === playerId);
+        if (!player) throw new Error("Joueur introuvable.");
+
+        if (this.lastAction !== ActionType.STEAL) {
+            throw new Error("Aucune action à bloquer.");
+        }
+
+        this.lastAction = ActionType.BLOCK_STEAL;
+        this.lastPlayerId = playerId;
+        return player;
     }
 
 

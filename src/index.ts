@@ -14,7 +14,8 @@ declare module 'discord.js' {
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
 });
-const gameManager = new GameManager();
+
+export const gameManager = new GameManager();
 
 client.commands = new Collection();
 client.gameManager = gameManager;
