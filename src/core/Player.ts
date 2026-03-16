@@ -13,4 +13,13 @@ export class Player {
     addCard(card: CardType) {
         this.cards.push(card);
     }
+
+    loseInfluence() {
+
+        if (this.cards.length === 0) {
+            throw new Error("Ce joueur n'a plus d'influence.");
+        }
+
+        return this.cards.pop();
+    }
 }

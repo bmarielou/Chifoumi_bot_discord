@@ -132,5 +132,43 @@ export class Game {
 
     }
 
+    assassinate(playerId: string, targetId: string) {
+
+        if (this.state !== GameState.STARTED) {
+            throw new Error("La partie n'a pas commencé.");
+        }
+
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            throw new Error("Ce n'est pas ton tour.");
+        }
+
+        if (currentPlayer.coins < 3) {
+            throw new Error("Il faut 3 pièces pour assassiner.");
+        }
+
+        const target = this.players.find(p => p.id === targetId);
+
+        if (!target) {
+            throw new Error("Cible introuvable.");
+        }
+
+        currentPlayer.coins -= 3;
+
+        const lostCard = target.loseInfluence();
+
+        this.lastAction = ActionType.ASSASSINATE;
+        this.lastPlayerId = playerId;
+
+        this.nextTurn();
+
+        return {
+            attacker: currentPlayer,
+            target: target,
+            lostCard: lostCard
+        };
+    }
+
 
 }
