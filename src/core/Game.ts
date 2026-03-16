@@ -66,6 +66,7 @@ export class Game {
         if (currentPlayer.id !== playerId) {
             throw new Error("Ce n'est pas votre tour.");
         }
+        // take a coin
         currentPlayer.coins += 1;
 
         this.nextTurn();
