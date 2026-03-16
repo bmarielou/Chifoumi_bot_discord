@@ -1,6 +1,8 @@
 import { GameState } from "./GameState";
 import { Player } from "./Player";
 import { Deck } from "./Deck";
+import { ActionType } from "./ActionType";
+import { CardType } from "./Cards";
 
 export class Game {
 
@@ -9,6 +11,8 @@ export class Game {
     state: GameState;
     deck!: Deck;
     currentPlayerIndex: number = 0;
+    lastAction: ActionType | null = null;
+    lastPlayerId: string | null = null;
 
     constructor(channelId: string) {
         this.channelId = channelId;
@@ -88,8 +92,45 @@ export class Game {
 
     currentPlayer.coins += 3;
 
+    this.lastAction = ActionType.TAX;
+    this.lastPlayerId = playerId;
+
     this.nextTurn();
 
     return currentPlayer;
-}
+
+    }
+
+    challenge(challengerId: string) {
+
+        if (!this.lastAction || !this.lastPlayerId) {
+            throw new Error("Aucune action à contester.");
+        }
+
+        const challengedPlayer = this.players.find(p => p.id === this.lastPlayerId);
+
+        if (!challengedPlayer) {
+            throw new Error("Joueur introuvable.");
+        }
+
+        if (this.lastAction === ActionType.TAX) {
+
+            const hasDuke = challengedPlayer.cards.includes(CardType.DUKE);
+
+            if (hasDuke) {
+                return {
+                    result: "challenge_failed",
+                    player: challengedPlayer
+                };
+            } else {
+                return {
+                    result: "challenge_success",
+                    player: challengedPlayer
+                };
+            }
+        }
+
+    }
+
+
 }
