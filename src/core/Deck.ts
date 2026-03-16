@@ -24,6 +24,12 @@ export class Deck {
         this.cards.sort(() => Math.random() - 0.5);
     }
 
+    returnCard(card: CardType) {
+        this.cards.push(card);
+        // option
+        this.shuffle();
+    }
+
     draw(): CardType | undefined {
         return this.cards.pop();
     }
