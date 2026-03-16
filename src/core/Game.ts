@@ -170,5 +170,23 @@ export class Game {
         };
     }
 
+    blockAssassination(playerId: string) {
+
+        if (this.lastAction !== ActionType.ASSASSINATE) {
+            throw new Error("Il n'y a pas d'assassinat à bloquer.");
+        }
+
+        const target = this.players.find(p => p.id === playerId);
+
+        if (!target) {
+            throw new Error("Joueur introuvable.");
+        }
+
+        this.lastAction = ActionType.BLOCK_ASSASSINATION;
+        this.lastPlayerId = playerId;
+
+        return target;
+    }
+
 
 }
