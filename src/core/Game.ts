@@ -73,4 +73,23 @@ export class Game {
 
         return currentPlayer;
     }
+
+    tax(playerId: string) {
+
+    if (this.state !== GameState.STARTED) {
+        throw new Error("La partie n'a pas commencé.");
+    }
+
+    const currentPlayer = this.getCurrentPlayer();
+
+    if (currentPlayer.id !== playerId) {
+        throw new Error("Ce n'est pas ton tour.");
+    }
+
+    currentPlayer.coins += 3;
+
+    this.nextTurn();
+
+    return currentPlayer;
+}
 }
