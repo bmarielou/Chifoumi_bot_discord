@@ -308,27 +308,24 @@ export class Game {
             throw new Error("Action déjà effectuée.");
         }
 
-        // on récupère les cartes actuelles du joueur
+        // take acualy card of player
         const oldCards = [...player.cards];
-        const newCards: string[] = [];
+        const newCards: CardType[] = [];
 
-        // le joueur remet ses cartes dans le deck
         oldCards.forEach(card => this.deck.returnCard(card));
 
-        // le joueur pioche deux nouvelles cartes
+        // this player take 2 news cards
         for (let i = 0; i < oldCards.length; i++) {
             const drawn = this.deck.draw();
             if (drawn) newCards.push(drawn);
         }
 
-        // met à jour les cartes du joueur
         player.cards = newCards;
 
-        // met à jour la dernière action
         this.lastAction = ActionType.EXCHANGE;
         this.lastPlayerId = playerId;
 
-        return newCards; // on retourne les nouvelles cartes
+        return newCards; // news card
     }
 
 }
