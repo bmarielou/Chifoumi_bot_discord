@@ -17,7 +17,15 @@ export async function execute(interaction: any) {
             ephemeral: true
         });
     }
-    // seul le joueur qui à créé la partie peut lancé la partie, s'il à quitté la partie passé au joueur suivant
+
+    // Vérifie que seul le créateur peut lancer la partie
+    if (interaction.user.id !== game.creatorId) {
+        return interaction.reply({
+            content: "Seul le créateur de la partie peut la lancer.",   //Partie a changer dans game et game manager pour identifié le createure de la partie (rappel)
+            ephemeral: true
+        });
+    }
+
     try {
         game.startGame();
 
@@ -28,8 +36,9 @@ export async function execute(interaction: any) {
                 `Tes cartes sont :\n- ${player.cards[0]}\n- ${player.cards[1]}`
             );
         }
+
         await interaction.reply("La partie commence.");
-        } catch (error: any) {
+    } catch (error: any) {
         await interaction.reply({
             content: `${error.message}`,
             ephemeral: true
