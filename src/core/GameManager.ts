@@ -14,7 +14,7 @@ export class GameManager {
             throw new Error("Une partie est déjà en cours dans ce salon.");
         }
 
-        const game = new Game(channelId);
+        const game = new Game(channelId, creatorId);  //ADD creator (rappel)
 
         // add creator on first player
         game.addPlayer(creatorId);
