@@ -22,4 +22,8 @@ export class Player {
 
         return this.cards.pop();
     }
+
+    isAlive(): boolean {
+        return this.cards.length > 0;
+    }
 }

@@ -61,6 +61,15 @@ export class Game {
             (this.currentPlayerIndex + 1) % this.players.length;
     }
 
+    checkGameEnd() {
+        const alivePlayers = this.players.filter(p => p.isAlive());
+        if (alivePlayers.length === 1) {
+            this.state = GameState.FINISHED;
+            return alivePlayers[0];
+        }
+        return null;
+    }
+    // take a coin
     income(playerId: string) {
 
         if (this.state !== GameState.STARTED) {
@@ -71,7 +80,7 @@ export class Game {
         if (currentPlayer.id !== playerId) {
             throw new Error("Ce n'est pas votre tour.");
         }
-        // take a coin
+        
         currentPlayer.coins += 1;
 
         this.nextTurn();
@@ -204,7 +213,7 @@ export class Game {
         // If action not challenger
         throw new Error("Action non contestable.");
     }
-
+    //assassin
     assassinate(playerId: string, targetId: string) {
 
         if (this.state !== GameState.STARTED) {
@@ -242,7 +251,7 @@ export class Game {
             lostCard: lostCard
         };
     }
-
+    //contessa
     blockAssassination(playerId: string) {
 
         if (this.lastAction !== ActionType.ASSASSINATE) {
@@ -260,7 +269,7 @@ export class Game {
 
         return target;
     }
-
+    //captain
     steal(playerId: string, targetId: string) {
         const player = this.players.find(p => p.id === playerId);
         const target = this.players.find(p => p.id === targetId);
@@ -299,7 +308,7 @@ export class Game {
         this.lastPlayerId = playerId;
         return player;
     }
-
+    //ambassador
     exchange(playerId: string) {
         const player = this.players.find(p => p.id === playerId);
         if (!player) throw new Error("Joueur introuvable.");

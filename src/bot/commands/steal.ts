@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: any) {
     const target = interaction.options.getUser('target');
 
-    // ⚡ Vérifie qu'une partie est en cours
+    // check if game already start
     const game = gameManager.currentGame;
     if (!game) {
         await interaction.reply({ content: "Aucune partie en cours.", ephemeral: true });
@@ -21,7 +21,7 @@ export async function execute(interaction: any) {
     }
 
     try {
-        // utilise la variable game déjà vérifiée
+        // use a variable game already check
         const stolen = game.steal(interaction.user.id, target.id);
         await interaction.reply(`<@${interaction.user.id}> a volé ${stolen} pièces à <@${target.id}> !`);
     } catch (err: any) {
