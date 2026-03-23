@@ -5,8 +5,8 @@ import { ActionType } from "./ActionType";
 import { CardType } from "./Cards";
 
 export class Game {
-
     channelId: string;
+    creatorId: string; //Ajoute createur pour feature (seul crea peut demarer partie)
     players: Player[] = [];
     state: GameState;
     deck!: Deck;
@@ -15,10 +15,12 @@ export class Game {
     lastPlayerId: string | null = null;
     lastTargetId: string | null = null;
 
-    constructor(channelId: string) {
+    constructor(channelId: string, creatorId: string) {
         this.channelId = channelId;
+        this.creatorId = creatorId; // ==
         this.state = GameState.WAITING;
-    }
+
+}
 
     addPlayer(playerId: string) {
 
