@@ -18,7 +18,7 @@ export async function execute(interaction: any) {
             ephemeral: true
         });
     }
-
+    // ajouter le systeme d'etat du joueur
     try {
 
         const result = game.challenge(userId);

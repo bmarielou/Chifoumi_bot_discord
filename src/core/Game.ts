@@ -87,7 +87,7 @@ export class Game {
 
         return currentPlayer;
     }
-
+    //Duke
     tax(playerId: string) {
 
     if (this.state !== GameState.STARTED) {

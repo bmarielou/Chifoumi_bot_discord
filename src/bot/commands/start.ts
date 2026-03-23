@@ -10,7 +10,7 @@ export async function execute(interaction: any) {
     const userId = interaction.user.id;
 
     const gameManager = interaction.client.gameManager;
-
+    //créé un nouveau salon qui sera supprimé à la fin de la partie.
     try {
         gameManager.createGame(channelId, userId);
 

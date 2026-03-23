@@ -17,7 +17,7 @@ export async function execute(interaction: any) {
             ephemeral: true
         });
     }
-
+    // seul le joueur qui à créé la partie peut lancé la partie, s'il à quitté la partie passé au joueur suivant
     try {
         game.startGame();
 
