@@ -5,6 +5,7 @@ export class Player {
     id: string;
     coins: number = 2;
     cards: CardType[] = [];
+    isActive: boolean = true;
 
     constructor(id: string) {
         this.id = id;
@@ -24,6 +25,6 @@ export class Player {
     }
 
     isAlive(): boolean {
-        return this.cards.length > 0;
+        return this.cards.length > 0 && this.isActive;
     }
 }

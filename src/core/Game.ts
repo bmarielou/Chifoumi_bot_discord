@@ -59,8 +59,12 @@ export class Game {
     }
 
     nextTurn() {
-        this.currentPlayerIndex =
-            (this.currentPlayerIndex + 1) % this.players.length;
+        const alivePlayers = this.players.filter(p => p.isAlive());
+        if (alivePlayers.length <= 1) return; // game should end
+
+        do {
+            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
+        } while (!this.players[this.currentPlayerIndex].isAlive());
     }
 
     checkGameEnd() {
@@ -287,6 +291,7 @@ export class Game {
             this.lastAction = ActionType.STEAL;
             this.lastPlayerId = playerId;
             this.lastTargetId = targetId;
+            this.nextTurn();
             return stolen;
         } else {
             target.coins -= 2;
@@ -294,6 +299,7 @@ export class Game {
             this.lastAction = ActionType.STEAL;
             this.lastPlayerId = playerId;
             this.lastTargetId = targetId;
+            this.nextTurn();
             return 2;
         }
     }
@@ -335,6 +341,8 @@ export class Game {
 
         this.lastAction = ActionType.EXCHANGE;
         this.lastPlayerId = playerId;
+
+        this.nextTurn();
 
         return newCards; // news card
     }
