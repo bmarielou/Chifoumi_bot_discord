@@ -4,13 +4,17 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-  "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "deploy": "ts-node-dev src/deploy-commands.ts"
+    "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "deploy": "ts-node-dev src/deploy-commands.ts"
   },
   "dependencies": {
-    "discord.js": "^14.25.1"
+    "@sapphire/framework": "^5.5.0",
+    "@sapphire/plugin-logger": "^4.1.0",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.4.1",
+    "tsc-watch": "^7.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
