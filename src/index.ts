@@ -86,8 +86,9 @@ const client = new SapphireClient({
 });
 
 async function main() {
-    ApplicationCommandRegistries.setDefaultGuildIds([config.guildId]);
-    await client.login(config.token);
+  client.logger.info('Starting bot...');
+  ApplicationCommandRegistries.setDefaultGuildIds([config.guildId]);
+  await client.login(config.token);
 }
 
 main().catch(error => {
