@@ -6,6 +6,7 @@ export class IncomeCommand extends Command {
       ...options,
       name: 'income',
       description: 'Prendre 1 pièce',
+      preconditions: ['checkGameActive']
     });
   } 
 
@@ -21,14 +22,7 @@ export class IncomeCommand extends Command {
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
-    const game = gameManager.getGame(channelId);
-
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
-    }
+    const game = gameManager.getGame(channelId)!;
 
     try {
         const player = game.income(userId);

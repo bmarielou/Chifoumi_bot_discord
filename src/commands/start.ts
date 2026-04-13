@@ -6,6 +6,7 @@ export class StartCommand extends Command {
       ...options,
       name: 'start',
       description: 'Créer une nouvelle partie de Coup',
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -20,7 +21,6 @@ export class StartCommand extends Command {
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const channelId = interaction.channelId;
     const userId= interaction.user.id;
-
     const gameManager = this.container.GameManager;
 
     try {

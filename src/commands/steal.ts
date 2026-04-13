@@ -6,6 +6,7 @@ export class StealCommand extends Command {
       ...options,
       name: 'steal',
       description: 'Voler 2 pièces à un autre joueur',
+      preconditions: ['checkGameActive']
     });
   } 
 
@@ -26,15 +27,8 @@ export class StealCommand extends Command {
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
-    const game = gameManager.getGame(channelId);
+    const game = gameManager.getGame(channelId)!;
     const target = interaction.options.getUser('target')!;
-
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
-    }
 
     try {
         // use a variable game already check

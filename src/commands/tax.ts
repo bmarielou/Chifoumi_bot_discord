@@ -6,6 +6,7 @@ export class TaxCommand extends Command {
       ...options,
       name: 'tax',
       description: 'Prendre 3 pièces (Duke)',
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -21,15 +22,7 @@ export class TaxCommand extends Command {
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
-
-    const game = gameManager.getGame(channelId);
-
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
-    }
+    const game = gameManager.getGame(channelId)!;
 
     try {
         const player = game.tax(userId);

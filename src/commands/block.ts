@@ -6,6 +6,7 @@ export class BlockCommand extends Command {
       ...options,
       name: 'block',
       description: 'Bloquer une action (ex: Contessa bloque assassinat)',
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -21,18 +22,10 @@ export class BlockCommand extends Command {
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
-
     const game = gameManager.getGame(channelId);
 
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
-    }
-
     try {
-        const player = game.blockAssassination(userId);
+        const player = game!.blockAssassination(userId);
         await interaction.reply(
             `<@${player.id}> bloque l'assassinat avec **Contessa** !`
         );

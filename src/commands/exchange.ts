@@ -6,6 +6,7 @@ export class ExchangeCommand extends Command {
       ...options,
       name: 'exchange',
       description: 'Échanger vos cartes avec le deck',
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -21,14 +22,7 @@ export class ExchangeCommand extends Command {
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
-    const game = gameManager.getGame(channelId);
-
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
-    }
+    const game = gameManager.getGame(channelId)!;
 
     try {
         // use a variable game already check

@@ -7,6 +7,7 @@ export class StatusCommand extends Command {
       ...options,
       name: 'status',
       description: `Afficher l'état de la partie`,
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -21,14 +22,8 @@ export class StatusCommand extends Command {
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const channelId = interaction.channelId;
     const gameManager = this.container.GameManager;
-    const game = gameManager.getGame(channelId);
+    const game = gameManager.getGame(channelId)!;
 
-    if (!game) {
-        return interaction.reply({
-            content: "Aucune partie en cours.",
-            ephemeral: true
-        });
-    }
     const players = game.players
         .map((p: any) => `<@${p.id}> — ${p.coins} pièces`)
         .join("\n");

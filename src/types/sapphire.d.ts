@@ -8,6 +8,6 @@ declare module '@sapphire/pieces' {
 
 declare module '@sapphire/framework' {
   interface Preconditions {
-    // Define any custom preconditions here
+    checkGameActive: never;
   }
 }

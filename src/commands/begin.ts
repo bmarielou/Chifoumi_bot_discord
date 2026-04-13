@@ -6,6 +6,7 @@ export class BeginCommand extends Command {
       ...options,
       name: 'begin',
       description: 'Lancer une partie',
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -20,15 +21,7 @@ export class BeginCommand extends Command {
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const channelId = interaction.channelId;
     const gameManager = this.container.GameManager;
-
-    const game = gameManager.getGame(channelId);
-
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
-    }
+    const game = gameManager.getGame(channelId)!;
 
     try {
         game.startGame();
