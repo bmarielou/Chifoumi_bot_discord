@@ -16,7 +16,7 @@ export async function execute(interaction: any) {
         });
     }
 
-    const result = game.tax(interaction.user.id);
+    const result = await game.tax(interaction.user.id);
 
     if (handleGameResult(interaction, result)) return;
 

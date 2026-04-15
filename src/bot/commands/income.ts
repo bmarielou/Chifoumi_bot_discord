@@ -16,11 +16,13 @@ export async function execute(interaction: any) {
         });
     }
 
-    const result = game.income(interaction.user.id);
+    const result = await game.income(interaction.user.id);
 
     if (handleGameResult(interaction, result)) return;
 
+    const player = result.data;
+
     await interaction.reply(
-        `💰 <@${result.id}> prend 1 pièce.\nIl a maintenant ${result.coins} pièces.`
+        `💰 <@${player.id}> prend 1 pièce.\nIl a maintenant ${player.coins} pièces.`
     );
 }

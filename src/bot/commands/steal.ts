@@ -23,7 +23,7 @@ export async function execute(interaction: any) {
         });
     }
 
-    const result = game.steal(interaction.user.id, target.id);
+    const result = await game.steal(interaction.user.id, target.id);
 
     if (handleGameResult(interaction, result)) return;
 

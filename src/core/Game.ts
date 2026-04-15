@@ -74,10 +74,13 @@ export class Game {
 
         if (alivePlayers.length <= 1) return;
 
+        let nextIndex = this.currentPlayerIndex;
+
         do {
-            this.currentPlayerIndex =
-                (this.currentPlayerIndex + 1) % this.players.length;
-        } while (!this.players[this.currentPlayerIndex].isAlive());
+            nextIndex = (nextIndex + 1) % this.players.length;
+        } while (!this.players[nextIndex].isAlive());
+
+        this.currentPlayerIndex = nextIndex;
     }
 
     async checkGameEnd(): Promise<Player | null> {
