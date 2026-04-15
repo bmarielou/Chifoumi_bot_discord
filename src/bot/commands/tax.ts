@@ -20,7 +20,9 @@ export async function execute(interaction: any) {
 
     if (handleGameResult(interaction, result)) return;
 
+    const player = result.data;
+
     await interaction.reply(
-        `👑 <@${result.id}> utilise Duke et gagne 3 pièces.\nIl a maintenant ${result.coins} pièces.`
+        `👑 <@${player.id}> utilise Duke et gagne 3 pièces.\nIl a maintenant ${player.coins} pièces.`
     );
 }

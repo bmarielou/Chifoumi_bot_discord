@@ -145,8 +145,15 @@ export class Game {
     }
 
     async steal(playerId: string, targetId: string): Promise<GameResult<number>> {
+
         if (this.state !== GameState.STARTED) {
             return { error: "GAME_NOT_STARTED" };
+        }
+
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            return { error: "NOT_YOUR_TURN" };
         }
 
         const player = this.players.find(p => p.id === playerId);
@@ -156,13 +163,19 @@ export class Game {
             return { error: "PLAYER_NOT_FOUND" };
         }
 
+        if (target.coins <= 0) {
+            return { error: "NO_COINS_TO_STEAL" };
+        }
+
         const stolen = target.coins < 2 ? target.coins : 2;
 
         target.coins -= stolen;
         player.coins += stolen;
 
-        await addCoin(playerId, this.gameId, stolen);
-        await addCoin(targetId, this.gameId, -stolen);
+        if (stolen > 0) {
+            await addCoin(playerId, this.gameId, stolen);
+            await addCoin(targetId, this.gameId, -stolen);
+        }
 
         this.lastAction = ActionType.STEAL;
         this.lastPlayerId = playerId;
