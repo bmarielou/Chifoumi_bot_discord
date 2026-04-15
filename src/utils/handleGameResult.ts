@@ -1,28 +1,30 @@
 export function handleGameResult(interaction: any, result: any): boolean {
 
-    if (!result) return false;
+    if (!result) return true;
 
-    if (result.error === "NOT_YOUR_TURN") {
+    if (typeof result === "object" && "error" in result) {
+
+        let message = "⛔ Erreur inconnue.";
+
+        switch (result.error) {
+            case "NOT_YOUR_TURN":
+                message = "⛔ Ce n'est pas votre tour.";
+                break;
+
+            case "GAME_NOT_STARTED":
+                message = "⛔ La partie n'a pas commencé.";
+                break;
+
+            case "NO_GAME":
+                message = "⛔ Aucune partie en cours.";
+                break;
+        }
+
         interaction.reply({
-            content: "Ce n'est pas votre tour.",
+            content: message,
             ephemeral: true
         });
-        return true;
-    }
 
-    if (result.error === "GAME_NOT_STARTED") {
-        interaction.reply({
-            content: "La partie n'a pas commencé.",
-            ephemeral: true
-        });
-        return true;
-    }
-
-    if (result.error === "NO_GAME") {
-        interaction.reply({
-            content: "Aucune partie en cours.",
-            ephemeral: true
-        });
         return true;
     }
 
