@@ -28,6 +28,6 @@ export async function execute(interaction: any) {
     if (handleGameResult(interaction, result)) return;
 
     await interaction.reply(
-        `🪙 <@${interaction.user.id}> vole ${result} pièces à <@${target.id}> !`
+        `🪙 <@${interaction.user.id}> vole 2 pièces à <@${target.id}> !`
     );
 }
