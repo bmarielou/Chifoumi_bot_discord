@@ -71,14 +71,22 @@ export class Game {
         this.currentPlayerIndex = nextIndex;
     }
 
-    checkGameEnd() {
+    async checkGameEnd() {
         const alivePlayers = this.players.filter(p => p.isAlive());
+
         if (alivePlayers.length === 1) {
             this.state = GameState.FINISHED;
-            return alivePlayers[0];
+
+            const winner = alivePlayers[0];
+
+            await endGame(this.gameId);
+
+            return winner;
         }
+
         return null;
     }
+    
     // take a coin
     income(playerId: string) {
 
