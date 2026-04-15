@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 import dotenv from 'dotenv';
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
+=======
+import { Client, Events, GatewayIntentBits, Collection, ChannelType, TextChannel } from 'discord.js';
+>>>>>>> 80886e101b6a129e4be085eed37ac1f319d19eff
 import { token } from './config.json';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +19,7 @@ declare module 'discord.js' {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 export const gameManager = new GameManager();
@@ -53,6 +57,20 @@ client.on('interactionCreate', async interaction => {
             content: 'Erreur lors de l\'exécution de la commande.',
             ephemeral: true
         });
+    }
+});
+
+/* Guild member remove handler */
+client.on(Events.GuildMemberRemove, async member => {
+    for (const [channelId, game] of gameManager.games) {
+        const player = game.players.find(p => p.id === member.id);
+        if (player) {
+            player.isActive = false;
+            const channel = client.channels.cache.get(channelId);
+            if (channel && channel.type === ChannelType.GuildText) {
+                await (channel as TextChannel).send(`<@${member.id}> a quitté le serveur et est retiré de la partie.`);
+            }
+        }
     }
 });
 

@@ -62,14 +62,20 @@ export class Game {
     }
 
     nextTurn() {
-        let nextIndex = this.currentPlayerIndex;
+    const alivePlayers = this.players.filter(p => p.isAlive());
 
-        do {
-            nextIndex = (nextIndex + 1) % this.players.length;
-        } while (!this.players[nextIndex].isAlive());
-
-        this.currentPlayerIndex = nextIndex;
+    if (alivePlayers.length <= 1) {
+        return; // game should end
     }
+
+    let nextIndex = this.currentPlayerIndex;
+
+    do {
+        nextIndex = (nextIndex + 1) % this.players.length;
+    } while (!this.players[nextIndex].isAlive());
+
+    this.currentPlayerIndex = nextIndex;
+}
 
     async checkGameEnd() {
         const alivePlayers = this.players.filter(p => p.isAlive());
@@ -322,6 +328,8 @@ export class Game {
         this.lastPlayerId = playerId;
         this.lastTargetId = targetId;
 
+        this.nextTurn();
+
         return stolen;
     }
 
@@ -362,6 +370,8 @@ export class Game {
 
         this.lastAction = ActionType.EXCHANGE;
         this.lastPlayerId = playerId;
+
+        this.nextTurn();
 
         return newCards; // news card
     }

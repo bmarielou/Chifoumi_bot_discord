@@ -3,7 +3,7 @@ import { Game } from "./Game";
 export class GameManager {
 
     currentGame: Game | null = null;
-    private games: Map<string, Game> = new Map();
+    games: Map<string, Game> = new Map();
     
 
     //Create new game in canal
@@ -13,7 +13,7 @@ export class GameManager {
         if (this.games.has(channelId)) {
             throw new Error("Une partie est déjà en cours dans ce salon.");
         }
-
+        
         const game = new Game(channelId, creatorId);
 
         // add creator on first player
