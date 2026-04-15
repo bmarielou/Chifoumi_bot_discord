@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 import dotenv from 'dotenv';
-import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
-=======
 import { Client, Events, GatewayIntentBits, Collection, ChannelType, TextChannel } from 'discord.js';
->>>>>>> 80886e101b6a129e4be085eed37ac1f319d19eff
 import { token } from './config.json';
 import fs from 'fs';
 import path from 'path';
