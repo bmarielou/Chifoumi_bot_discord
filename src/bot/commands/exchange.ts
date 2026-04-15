@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { gameManager } from '../../index';
+import { gameManager } from '../../core/gameManagerInstance';
 
 export const data = new SlashCommandBuilder()
     .setName('exchange')
