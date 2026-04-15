@@ -1,8 +1,11 @@
+import dotenv from 'dotenv';
 import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
 import { token } from './config.json';
 import fs from 'fs';
 import path from 'path';
 import { GameManager } from "./core/GameManager";
+
+dotenv.config();
 
 declare module 'discord.js' {
   interface Client {
