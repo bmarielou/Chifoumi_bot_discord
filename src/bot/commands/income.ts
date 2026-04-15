@@ -19,18 +19,23 @@ export async function execute(interaction: any) {
         });
     }
 
-    try {
+    const result = game.income(userId);
 
-        const player = game.income(userId);
-
-        await interaction.reply(
-            `💰 <@${player.id}> prend 1 pièce.\nIl a maintenant ${player.coins} pièces.`
-        );
-
-    } catch (error: any) {
-        await interaction.reply({
-            content: `${error.message}`,
+    if (result?.error === "NOT_YOUR_TURN") {
+        return interaction.reply({
+            content: "Ce n'est pas votre tour.",
             ephemeral: true
         });
     }
+
+    if (result?.error === "GAME_NOT_STARTED") {
+        return interaction.reply({
+            content: "La partie n'a pas commencé.",
+            ephemeral: true
+        });
+    }
+
+    await interaction.reply(
+        `💰 <@${result.id}> prend 1 pièce.\nIl a maintenant ${result.coins} pièces.`
+    );
 }

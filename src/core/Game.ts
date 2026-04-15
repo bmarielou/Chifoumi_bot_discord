@@ -62,20 +62,20 @@ export class Game {
     }
 
     nextTurn() {
-    const alivePlayers = this.players.filter(p => p.isAlive());
+        const alivePlayers = this.players.filter(p => p.isAlive());
 
-    if (alivePlayers.length <= 1) {
-        return; // game should end
+        if (alivePlayers.length <= 1) {
+            return; // game should end
+        }
+
+        let nextIndex = this.currentPlayerIndex;
+
+        do {
+            nextIndex = (nextIndex + 1) % this.players.length;
+        } while (!this.players[nextIndex].isAlive());
+
+        this.currentPlayerIndex = nextIndex;
     }
-
-    let nextIndex = this.currentPlayerIndex;
-
-    do {
-        nextIndex = (nextIndex + 1) % this.players.length;
-    } while (!this.players[nextIndex].isAlive());
-
-    this.currentPlayerIndex = nextIndex;
-}
 
     async checkGameEnd() {
         const alivePlayers = this.players.filter(p => p.isAlive());
@@ -102,7 +102,7 @@ export class Game {
         const currentPlayer = this.getCurrentPlayer();
 
         if (currentPlayer.id !== playerId) {
-            throw new Error("Ce n'est pas votre tour.");
+            return { error: "NOT_YOUR_TURN" };
         }
         
         currentPlayer.coins += 1;
