@@ -1,30 +1,33 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { gameManager } from '../../core/gameManagerInstance';
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
     .setName('steal')
     .setDescription('Voler 2 pièces à un autre joueur')
     .addUserOption(option =>
         option.setName('target')
-              .setDescription('Le joueur à voler')
-              .setRequired(true)
+            .setDescription('Le joueur à voler')
+            .setRequired(true)
     );
 
 export async function execute(interaction: any) {
+
     const target = interaction.options.getUser('target');
 
-    // check if game already start
-    const game = gameManager.currentGame;
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
+
     if (!game) {
-        await interaction.reply({ content: "Aucune partie en cours.", ephemeral: true });
-        return;
+        return interaction.reply({
+            content: "Aucune partie en cours.",
+            ephemeral: true
+        });
     }
 
-    try {
-        // use a variable game already check
-        const stolen = game.steal(interaction.user.id, target.id);
-        await interaction.reply(`<@${interaction.user.id}> a volé ${stolen} pièces à <@${target.id}> !`);
-    } catch (err: any) {
-        await interaction.reply({ content: err.message, ephemeral: true });
-    }
+    const result = game.steal(interaction.user.id, target.id);
+
+    if (handleGameResult(interaction, result)) return;
+
+    await interaction.reply(
+        `🪙 <@${interaction.user.id}> vole ${result} pièces à <@${target.id}> !`
+    );
 }

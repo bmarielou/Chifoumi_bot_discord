@@ -6,11 +6,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
-
-    const gameManager = interaction.client.gameManager;
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -18,32 +14,19 @@ export async function execute(interaction: any) {
             ephemeral: true
         });
     }
-    // ajouter le systeme d'etat du joueur
-    try {
 
-        const result = game.challenge(userId);
+    const result = game.challenge(interaction.user.id);
 
-        if (result.result === "challenge_failed") {
-
-            await interaction.reply(
-                `Challenge échoué ! <@${result.player.id}> avait bien **Duke**.`
-            );
-
-        } else {
-
-            await interaction.reply(
-                `Challenge réussi ! <@${result.player.id}> bluffait !`
-            );
-
-        }
-
-    } catch (error: any) {
-
-        await interaction.reply({
-            content: `${error.message}`,
+    if (result?.error) {
+        return interaction.reply({
+            content: result.error,
             ephemeral: true
         });
-
     }
 
+    if (result.result === "challenge_failed") {
+        await interaction.reply(`❌ Challenge échoué ! <@${result.target.id}> avait bien la carte.`);
+    } else {
+        await interaction.reply(`🔥 Challenge réussi ! <@${result.target.id}> bluffait !`);
+    }
 }

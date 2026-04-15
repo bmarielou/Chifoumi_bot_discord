@@ -6,12 +6,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
-
-    const gameManager = interaction.client.gameManager;
-
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -20,14 +15,14 @@ export async function execute(interaction: any) {
         });
     }
 
-    try {
-        game.addPlayer(userId);
+    const result = game.addPlayer(interaction.user.id);
 
-        await interaction.reply("Vous avez rejoint la partie !");
-    } catch (error: any) {
-        await interaction.reply({
-            content: `${error.message}`,
+    if (result?.error) {
+        return interaction.reply({
+            content: result.error,
             ephemeral: true
         });
     }
+
+    await interaction.reply("✅ Vous avez rejoint la partie !");
 }

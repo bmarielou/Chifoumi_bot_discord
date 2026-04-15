@@ -2,21 +2,20 @@ import { Game } from "./Game";
 
 export class GameManager {
 
-    currentGame: Game | null = null;
     games: Map<string, Game> = new Map();
-    
 
-    //Create new game in canal
     createGame(channelId: string, creatorId: string): Game {
 
-        // Check if game already exists
-        if (this.games.has(channelId)) {
+        const existingGame = this.games.get(channelId);
+
+        if (existingGame) {
+            // version safe (pas de crash bot)
             throw new Error("Une partie est déjà en cours dans ce salon.");
         }
-        
+
         const game = new Game(channelId, creatorId);
 
-        // add creator on first player
+        // creator auto join
         game.addPlayer(creatorId);
 
         this.games.set(channelId, game);
@@ -24,18 +23,33 @@ export class GameManager {
         return game;
     }
 
-    //Recup game already exists
     getGame(channelId: string): Game | undefined {
         return this.games.get(channelId);
     }
 
-    //delete game 
     deleteGame(channelId: string): void {
         this.games.delete(channelId);
     }
 
-    //Check if game already exists
     hasGame(channelId: string): boolean {
         return this.games.has(channelId);
+    }
+
+    async endGame(channelId: string): Promise<void> {
+        const game = this.games.get(channelId);
+
+        if (!game) return;
+
+        try {
+            await game.checkGameEnd();
+        } catch (err) {
+            console.error("Error ending game:", err);
+        }
+
+        this.games.delete(channelId);
+    }
+
+    getAllGames(): Game[] {
+        return Array.from(this.games.values());
     }
 }

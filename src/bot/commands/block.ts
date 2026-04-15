@@ -2,15 +2,11 @@ import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
     .setName("block")
-    .setDescription("Bloquer une action (ex: Contessa bloque assassinat)");
+    .setDescription("Bloquer une action");
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
-
-    const gameManager = interaction.client.gameManager;
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -19,21 +15,16 @@ export async function execute(interaction: any) {
         });
     }
 
-    try {
+    const result = game.blockAssassination(interaction.user.id);
 
-        const player = game.blockAssassination(userId);
-
-        await interaction.reply(
-            `<@${player.id}> bloque l'assassinat avec **Contessa** !`
-        );
-
-    } catch (error: any) {
-
-        await interaction.reply({
-            content: `${error.message}`,
+    if (result?.error) {
+        return interaction.reply({
+            content: result.error,
             ephemeral: true
         });
-
     }
 
+    await interaction.reply(
+        `🛡️ <@${result.id}> bloque l'assassinat avec Contessa !`
+    );
 }

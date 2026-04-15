@@ -1,23 +1,26 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { gameManager } from '../../core/gameManagerInstance';
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
     .setName('exchange')
     .setDescription('Échanger vos cartes avec le deck');
 
 export async function execute(interaction: any) {
-    // check if game already start
-    const game = gameManager.currentGame;
+
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
+
     if (!game) {
-        await interaction.reply({ content: "Aucune partie en cours.", ephemeral: true });
-        return;
+        return interaction.reply({
+            content: "Aucune partie en cours.",
+            ephemeral: true
+        });
     }
 
-    try {
-        // use a variable game already check
-        const newCards = game.exchange(interaction.user.id);
-        await interaction.reply(`<@${interaction.user.id}> a échangé ses cartes.`);
-    } catch (err: any) {
-        await interaction.reply({ content: err.message, ephemeral: true });
-    }
+    const result = game.exchange(interaction.user.id);
+
+    if (handleGameResult(interaction, result)) return;
+
+    await interaction.reply(
+        `🔄 <@${interaction.user.id}> a échangé ses cartes.`
+    );
 }

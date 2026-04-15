@@ -3,58 +3,66 @@ import { Player } from "./Player";
 import { Deck } from "./Deck";
 import { ActionType } from "./ActionType";
 import { CardType } from "./Cards";
-import { eliminatePlayer, addCoin } from '../database/participationService';
-import { endGame } from '../database/gameService';
+import { eliminatePlayer, addCoin } from "../database/participationService";
+import { gameManager } from "./gameManagerInstance";
+
+type GameResult<T = any> =
+    | { ok: true; data: T }
+    | { error: string };
 
 export class Game {
     channelId: string;
-    creatorId: string; //Ajoute createur pour feature (seul crea peut demarer partie)
+    creatorId: string;
     players: Player[] = [];
     state: GameState;
     deck!: Deck;
+
     currentPlayerIndex: number = 0;
+
     lastAction: ActionType | null = null;
     lastPlayerId: string | null = null;
     lastTargetId: string | null = null;
-    gameId!: number; 
+
+    gameId!: number;
 
     constructor(channelId: string, creatorId: string) {
         this.channelId = channelId;
-        this.creatorId = creatorId; // ==
+        this.creatorId = creatorId;
         this.state = GameState.WAITING;
-
     }
 
-    addPlayer(playerId: string) {
-
+    addPlayer(playerId: string): GameResult {
         if (this.state !== GameState.WAITING) {
-            throw new Error("Partie déjà lancé.")
+            return { error: "GAME_ALREADY_STARTED" };
         }
 
         if (this.players.find(p => p.id === playerId)) {
-            throw new Error("Vous etes déjà dans cette partie.");
+            return { error: "ALREADY_IN_GAME" };
         }
 
         if (this.players.length >= 6) {
-            throw new Error("La partie est pleine.");
+            return { error: "GAME_FULL" };
         }
 
         this.players.push(new Player(playerId));
+
+        return { ok: true, data: true };
     }
 
-    startGame() {
+    startGame(): GameResult {
         if (this.players.length < 2) {
-            throw new Error("Il faut au moins 2 joueurs pour commencer.");
+            return { error: "NOT_ENOUGH_PLAYERS" };
         }
 
         this.state = GameState.STARTED;
         this.deck = new Deck();
 
-        //distibute 2 cards for only players
         for (const player of this.players) {
             player.addCard(this.deck.draw()!);
             player.addCard(this.deck.draw()!);
         }
+
+        return { ok: true, data: true };
     }
 
     getCurrentPlayer(): Player {
@@ -64,28 +72,25 @@ export class Game {
     nextTurn() {
         const alivePlayers = this.players.filter(p => p.isAlive());
 
-        if (alivePlayers.length <= 1) {
-            return; // game should end
-        }
-
-        let nextIndex = this.currentPlayerIndex;
+        if (alivePlayers.length <= 1) return;
 
         do {
-            nextIndex = (nextIndex + 1) % this.players.length;
-        } while (!this.players[nextIndex].isAlive());
-
-        this.currentPlayerIndex = nextIndex;
+            this.currentPlayerIndex =
+                (this.currentPlayerIndex + 1) % this.players.length;
+        } while (!this.players[this.currentPlayerIndex].isAlive());
     }
 
-    async checkGameEnd() {
+    async checkGameEnd(): Promise<Player | null> {
         const alivePlayers = this.players.filter(p => p.isAlive());
 
         if (alivePlayers.length === 1) {
-            this.state = GameState.FINISHED;
-
             const winner = alivePlayers[0];
 
-            await endGame(this.gameId);
+            this.state = GameState.FINISHED;
+
+            console.log(`Game finished in ${this.channelId}, winner: ${winner.id}`);
+
+            gameManager.deleteGame(this.channelId);
 
             return winner;
         }
@@ -93,37 +98,35 @@ export class Game {
         return null;
     }
 
-    // take a coin
-    async income(playerId: string) {
-
+    async income(playerId: string): Promise<GameResult<Player>> {
         if (this.state !== GameState.STARTED) {
-            throw new Error("La partie n'a pas commencé.");
+            return { error: "GAME_NOT_STARTED" };
         }
+
         const currentPlayer = this.getCurrentPlayer();
 
         if (currentPlayer.id !== playerId) {
             return { error: "NOT_YOUR_TURN" };
         }
-        
+
         currentPlayer.coins += 1;
 
         await addCoin(playerId, this.gameId, 1);
 
         this.nextTurn();
 
-        return currentPlayer;
+        return { ok: true, data: currentPlayer };
     }
-    //Duke
-    async tax(playerId: string) {
 
+    async tax(playerId: string): Promise<GameResult<Player>> {
         if (this.state !== GameState.STARTED) {
-            throw new Error("La partie n'a pas commencé.");
+            return { error: "GAME_NOT_STARTED" };
         }
 
         const currentPlayer = this.getCurrentPlayer();
 
         if (currentPlayer.id !== playerId) {
-            throw new Error("Ce n'est pas ton tour.");
+            return { error: "NOT_YOUR_TURN" };
         }
 
         currentPlayer.coins += 3;
@@ -135,133 +138,57 @@ export class Game {
 
         this.nextTurn();
 
-        return currentPlayer;
-
+        return { ok: true, data: currentPlayer };
     }
 
-    async challenge(challengerId: string) {
-
-        if (!this.lastAction || !this.lastPlayerId) {
-            throw new Error("Aucune action à contester.");
-        }
-
-        const challengedPlayer = this.players.find(p => p.id === this.lastPlayerId);
-        const challenger = this.players.find(p => p.id === challengerId); // <-- important
-
-        if (!challengedPlayer || !challenger) {
-            throw new Error("Joueur introuvable.");
-        }
-
-        // Challenge Duke
-        if (this.lastAction === ActionType.TAX) {
-            const hasDuke = challengedPlayer.cards.includes(CardType.DUKE);
-
-            if (hasDuke) {
-                const lostCard = challenger.loseInfluence();
-                return {
-                    result: "challenge_failed",
-                    lostCard,
-                    message: `${challenger.id} a perdu une influence ! (Duke confirmé)`
-                };
-            } else {
-                const lostCard = challengedPlayer.loseInfluence();
-                return {
-                    result: "challenge_success",
-                    lostCard,
-                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
-                };
-            }
-        }
-
-        // Challenge Assassin
-        if (this.lastAction === ActionType.ASSASSINATE) {
-            const hasAssassin = challengedPlayer.cards.includes(CardType.ASSASSIN);
-
-            if (hasAssassin) {
-                const lostCard = challenger.loseInfluence();
-                return {
-                    result: "challenge_failed",
-                    lostCard,
-                    message: `${challenger.id} a perdu une influence ! (Assassin confirmé)`
-                };
-            } else {
-                const lostCard = challengedPlayer.loseInfluence();
-                return {
-                    result: "challenge_success",
-                    lostCard,
-                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
-                };
-            }
-        }
-
-        // Challenge Contessa
-        if (this.lastAction === ActionType.BLOCK_ASSASSINATION) {
-            const hasContessa = challengedPlayer.cards.includes(CardType.CONTESSA);
-
-            if (hasContessa) {
-                const lostCard = challenger.loseInfluence();
-                return {
-                    result: "challenge_failed",
-                    lostCard,
-                    message: `${challenger.id} a perdu une influence ! (Contessa confirmée)`
-                };
-            } else {
-                const lostCard = challengedPlayer.loseInfluence();
-                return {
-                    result: "challenge_success",
-                    lostCard,
-                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
-                };
-            }
-        }
-
-        // Challenge sur Captain (STEAL)
-        if (this.lastAction === ActionType.STEAL) {
-            const hasCaptain = challengedPlayer.cards.includes(CardType.CAPTAIN);
-
-            if (hasCaptain) {
-                // Challenge échoué → challenger perd une carte
-                const lostCard = challenger.loseInfluence();
-                return {
-                    result: "challenge_failed",
-                    lostCard,
-                    message: `${challenger.id} a perdu une influence ! (Captain confirmé)`
-                };
-            } else {
-                // Challenge réussi → joueur bluffeur perd une carte
-                const lostCard = challengedPlayer.loseInfluence();
-                return {
-                    result: "challenge_success",
-                    lostCard,
-                    message: `${challengedPlayer.id} bluffait et a perdu une influence !`
-                };
-            }
-        }
-
-        // If action not challenger
-        throw new Error("Action non contestable.");
-    }
-    //assassin
-    async assassinate(playerId: string, targetId: string) {
-
+    async steal(playerId: string, targetId: string): Promise<GameResult<number>> {
         if (this.state !== GameState.STARTED) {
-            throw new Error("La partie n'a pas commencé.");
+            return { error: "GAME_NOT_STARTED" };
+        }
+
+        const player = this.players.find(p => p.id === playerId);
+        const target = this.players.find(p => p.id === targetId);
+
+        if (!player || !target) {
+            return { error: "PLAYER_NOT_FOUND" };
+        }
+
+        const stolen = target.coins < 2 ? target.coins : 2;
+
+        target.coins -= stolen;
+        player.coins += stolen;
+
+        await addCoin(playerId, this.gameId, stolen);
+        await addCoin(targetId, this.gameId, -stolen);
+
+        this.lastAction = ActionType.STEAL;
+        this.lastPlayerId = playerId;
+        this.lastTargetId = targetId;
+
+        this.nextTurn();
+
+        return { ok: true, data: stolen };
+    }
+
+    async assassinate(playerId: string, targetId: string): Promise<GameResult> {
+        if (this.state !== GameState.STARTED) {
+            return { error: "GAME_NOT_STARTED" };
         }
 
         const currentPlayer = this.getCurrentPlayer();
 
         if (currentPlayer.id !== playerId) {
-            throw new Error("Ce n'est pas ton tour.");
+            return { error: "NOT_YOUR_TURN" };
         }
 
         if (currentPlayer.coins < 3) {
-            throw new Error("Il faut 3 pièces pour assassiner.");
+            return { error: "NOT_ENOUGH_COINS" };
         }
 
         const target = this.players.find(p => p.id === targetId);
 
         if (!target) {
-            throw new Error("Cible introuvable.");
+            return { error: "TARGET_NOT_FOUND" };
         }
 
         currentPlayer.coins -= 3;
@@ -274,93 +201,62 @@ export class Game {
 
         this.lastAction = ActionType.ASSASSINATE;
         this.lastPlayerId = playerId;
+        this.lastTargetId = targetId;
 
         this.nextTurn();
 
         return {
-            attacker: currentPlayer,
-            target: target,
-            lostCard: lostCard
+            ok: true,
+            data: { target, lostCard }
         };
     }
-    //contessa
-    blockAssassination(playerId: string) {
 
+    blockAssassination(playerId: string): GameResult<Player> {
         if (this.lastAction !== ActionType.ASSASSINATE) {
-            throw new Error("Il n'y a pas d'assassinat à bloquer.");
+            return { error: "NO_ASSASSINATION_TO_BLOCK" };
         }
 
-        const target = this.players.find(p => p.id === playerId);
+        const player = this.players.find(p => p.id === playerId);
 
-        if (!target) {
-            throw new Error("Joueur introuvable.");
+        if (!player) {
+            return { error: "PLAYER_NOT_FOUND" };
         }
 
         this.lastAction = ActionType.BLOCK_ASSASSINATION;
         this.lastPlayerId = playerId;
 
-        return target;
+        return { ok: true, data: player };
     }
-    //captain
-    async steal(playerId: string, targetId: string) {
+
+    blockSteal(playerId: string): GameResult<Player> {
         const player = this.players.find(p => p.id === playerId);
-        const target = this.players.find(p => p.id === targetId);
 
-        if (!player || !target) throw new Error("Joueur introuvable.");
-        if (this.state !== GameState.STARTED) throw new Error("La partie n'a pas commencé.");
-
-        let stolen: number;
-
-        if (target.coins < 2) {
-            stolen = target.coins;
-            target.coins = 0;
-        } else {
-            stolen = 2;
-            target.coins -= 2;
+        if (!player) {
+            return { error: "PLAYER_NOT_FOUND" };
         }
 
-        player.coins += stolen;
-
-        await addCoin(playerId, this.gameId, stolen);
-        await addCoin(targetId, this.gameId, -stolen);
-
-        this.lastAction = ActionType.STEAL;
-        this.lastPlayerId = playerId;
-        this.lastTargetId = targetId;
-
-        this.nextTurn();
-
-        return stolen;
-    }
-
-    blockSteal(playerId: string) {
-        const player = this.players.find(p => p.id === playerId);
-        if (!player) throw new Error("Joueur introuvable.");
-
         if (this.lastAction !== ActionType.STEAL) {
-            throw new Error("Aucune action à bloquer.");
+            return { error: "NO_STEAL_TO_BLOCK" };
         }
 
         this.lastAction = ActionType.BLOCK_STEAL;
         this.lastPlayerId = playerId;
-        return player;
-    }
-    //ambassador
-    exchange(playerId: string) {
-        const player = this.players.find(p => p.id === playerId);
-        if (!player) throw new Error("Joueur introuvable.");
 
-        if (this.lastAction === ActionType.EXCHANGE) {
-            throw new Error("Action déjà effectuée.");
+        return { ok: true, data: player };
+    }
+
+    exchange(playerId: string): GameResult<CardType[]> {
+        const player = this.players.find(p => p.id === playerId);
+
+        if (!player) {
+            return { error: "PLAYER_NOT_FOUND" };
         }
 
-        // take acualy card of player
         const oldCards = [...player.cards];
         const newCards: CardType[] = [];
 
         oldCards.forEach(card => this.deck.returnCard(card));
 
-        // this player take 2 news cards
         for (let i = 0; i < oldCards.length; i++) {
             const drawn = this.deck.draw();
             if (drawn) newCards.push(drawn);
@@ -373,7 +269,6 @@ export class Game {
 
         this.nextTurn();
 
-        return newCards; // news card
+        return { ok: true, data: newCards };
     }
-
 }

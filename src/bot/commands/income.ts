@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
     .setName("income")
@@ -6,11 +7,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
-
-    const gameManager = interaction.client.gameManager;
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -19,21 +16,9 @@ export async function execute(interaction: any) {
         });
     }
 
-    const result = game.income(userId);
+    const result = game.income(interaction.user.id);
 
-    if (result?.error === "NOT_YOUR_TURN") {
-        return interaction.reply({
-            content: "Ce n'est pas votre tour.",
-            ephemeral: true
-        });
-    }
-
-    if (result?.error === "GAME_NOT_STARTED") {
-        return interaction.reply({
-            content: "La partie n'a pas commencé.",
-            ephemeral: true
-        });
-    }
+    if (handleGameResult(interaction, result)) return;
 
     await interaction.reply(
         `💰 <@${result.id}> prend 1 pièce.\nIl a maintenant ${result.coins} pièces.`

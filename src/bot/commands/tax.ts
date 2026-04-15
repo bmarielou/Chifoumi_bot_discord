@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
     .setName("tax")
@@ -6,11 +7,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
-
-    const gameManager = interaction.client.gameManager;
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -19,20 +16,11 @@ export async function execute(interaction: any) {
         });
     }
 
-    try {
+    const result = game.tax(interaction.user.id);
 
-        const player = game.tax(userId);
+    if (handleGameResult(interaction, result)) return;
 
-        await interaction.reply(
-            `<@${player.id}> utilise **Duke** et gagne 3 pièces.\nIl a maintenant ${player.coins} pièces.`
-        );
-
-    } catch (error: any) {
-
-        await interaction.reply({
-            content: ` ${error.message}`,
-            ephemeral: true
-        });
-
-    }
+    await interaction.reply(
+        `👑 <@${result.id}> utilise Duke et gagne 3 pièces.\nIl a maintenant ${result.coins} pièces.`
+    );
 }

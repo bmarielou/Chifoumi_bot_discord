@@ -6,9 +6,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const gameManager = interaction.client.gameManager;
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -24,7 +22,7 @@ export async function execute(interaction: any) {
     const currentPlayer = game.getCurrentPlayer();
 
     const embed = new EmbedBuilder()
-        .setTitle("État de la partie")
+        .setTitle("🎮 État de la partie")
         .addFields(
             { name: "Joueurs", value: players || "Aucun joueur" },
             { name: "Tour actuel", value: `<@${currentPlayer.id}>` }

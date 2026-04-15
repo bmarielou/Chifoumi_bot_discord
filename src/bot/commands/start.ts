@@ -6,18 +6,16 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const userId = interaction.user.id;
-
-    const gameManager = interaction.client.gameManager;
-    //créé un nouveau salon qui sera supprimé à la fin de la partie.
     try {
-        gameManager.createGame(channelId, userId);
+        interaction.client.gameManager.createGame(
+            interaction.channelId,
+            interaction.user.id
+        );
 
-        await interaction.reply("Partie créée ! Les joueurs peuvent rejoindre avec /join");
+        await interaction.reply("🎮 Partie créée ! Utilisez /join pour rejoindre.");
     } catch (error: any) {
         await interaction.reply({
-            content: `${error.message}`,
+            content: error.message,
             ephemeral: true
         });
     }

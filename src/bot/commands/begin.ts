@@ -6,10 +6,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
-    const gameManager = interaction.client.gameManager;
-
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -18,30 +15,29 @@ export async function execute(interaction: any) {
         });
     }
 
-    // Vérifie que seul le créateur peut lancer la partie
     if (interaction.user.id !== game.creatorId) {
         return interaction.reply({
-            content: "Seul le créateur de la partie peut la lancer.",   //Partie a changer dans game et game manager pour identifié le createure de la partie (rappel)
+            content: "Seul le créateur peut lancer la partie.",
             ephemeral: true
         });
     }
 
-    try {
-        game.startGame();
+    const result = game.startGame();
 
-        for (const player of game.players) {
-            const user = await interaction.client.users.fetch(player.id);
-
-            await user.send(
-                `Tes cartes sont :\n- ${player.cards[0]}\n- ${player.cards[1]}`
-            );
-        }
-
-        await interaction.reply("La partie commence.");
-    } catch (error: any) {
-        await interaction.reply({
-            content: `${error.message}`,
+    if (result?.error) {
+        return interaction.reply({
+            content: result.error,
             ephemeral: true
         });
     }
+
+    for (const player of game.players) {
+        const user = await interaction.client.users.fetch(player.id);
+
+        await user.send(
+            `🎴 Tes cartes :\n- ${player.cards[0]}\n- ${player.cards[1]}`
+        );
+    }
+
+    await interaction.reply("🚀 La partie commence !");
 }
