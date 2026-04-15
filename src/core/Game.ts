@@ -3,6 +3,8 @@ import { Player } from "./Player";
 import { Deck } from "./Deck";
 import { ActionType } from "./ActionType";
 import { CardType } from "./Cards";
+import { eliminatePlayer, addCoin } from '../database/participationService';
+import { endGame } from '../database/gameService';
 
 export class Game {
     channelId: string;
@@ -14,13 +16,14 @@ export class Game {
     lastAction: ActionType | null = null;
     lastPlayerId: string | null = null;
     lastTargetId: string | null = null;
+    gameId!: number; 
 
     constructor(channelId: string, creatorId: string) {
         this.channelId = channelId;
         this.creatorId = creatorId; // ==
         this.state = GameState.WAITING;
 
-}
+    }
 
     addPlayer(playerId: string) {
 
@@ -59,8 +62,13 @@ export class Game {
     }
 
     nextTurn() {
-        this.currentPlayerIndex =
-            (this.currentPlayerIndex + 1) % this.players.length;
+        let nextIndex = this.currentPlayerIndex;
+
+        do {
+            nextIndex = (nextIndex + 1) % this.players.length;
+        } while (!this.players[nextIndex].isAlive());
+
+        this.currentPlayerIndex = nextIndex;
     }
 
     checkGameEnd() {
