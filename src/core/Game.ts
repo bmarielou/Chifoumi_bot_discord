@@ -86,9 +86,9 @@ export class Game {
 
         return null;
     }
-    
+
     // take a coin
-    income(playerId: string) {
+    async income(playerId: string) {
 
         if (this.state !== GameState.STARTED) {
             throw new Error("La partie n'a pas commencé.");
@@ -101,35 +101,39 @@ export class Game {
         
         currentPlayer.coins += 1;
 
+        await addCoin(playerId, this.gameId, 1);
+
         this.nextTurn();
 
         return currentPlayer;
     }
     //Duke
-    tax(playerId: string) {
+    async tax(playerId: string) {
 
-    if (this.state !== GameState.STARTED) {
-        throw new Error("La partie n'a pas commencé.");
+        if (this.state !== GameState.STARTED) {
+            throw new Error("La partie n'a pas commencé.");
+        }
+
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            throw new Error("Ce n'est pas ton tour.");
+        }
+
+        currentPlayer.coins += 3;
+
+        await addCoin(playerId, this.gameId, 3);
+
+        this.lastAction = ActionType.TAX;
+        this.lastPlayerId = playerId;
+
+        this.nextTurn();
+
+        return currentPlayer;
+
     }
 
-    const currentPlayer = this.getCurrentPlayer();
-
-    if (currentPlayer.id !== playerId) {
-        throw new Error("Ce n'est pas ton tour.");
-    }
-
-    currentPlayer.coins += 3;
-
-    this.lastAction = ActionType.TAX;
-    this.lastPlayerId = playerId;
-
-    this.nextTurn();
-
-    return currentPlayer;
-
-    }
-
-    challenge(challengerId: string) {
+    async challenge(challengerId: string) {
 
         if (!this.lastAction || !this.lastPlayerId) {
             throw new Error("Aucune action à contester.");
@@ -232,7 +236,7 @@ export class Game {
         throw new Error("Action non contestable.");
     }
     //assassin
-    assassinate(playerId: string, targetId: string) {
+    async assassinate(playerId: string, targetId: string) {
 
         if (this.state !== GameState.STARTED) {
             throw new Error("La partie n'a pas commencé.");
@@ -257,6 +261,10 @@ export class Game {
         currentPlayer.coins -= 3;
 
         const lostCard = target.loseInfluence();
+
+        if (!target.isAlive()) {
+            await eliminatePlayer(target.id, this.gameId);
+        }
 
         this.lastAction = ActionType.ASSASSINATE;
         this.lastPlayerId = playerId;
@@ -288,30 +296,33 @@ export class Game {
         return target;
     }
     //captain
-    steal(playerId: string, targetId: string) {
+    async steal(playerId: string, targetId: string) {
         const player = this.players.find(p => p.id === playerId);
         const target = this.players.find(p => p.id === targetId);
 
         if (!player || !target) throw new Error("Joueur introuvable.");
-
         if (this.state !== GameState.STARTED) throw new Error("La partie n'a pas commencé.");
 
+        let stolen: number;
+
         if (target.coins < 2) {
-            const stolen = target.coins;
+            stolen = target.coins;
             target.coins = 0;
-            player.coins += stolen;
-            this.lastAction = ActionType.STEAL;
-            this.lastPlayerId = playerId;
-            this.lastTargetId = targetId;
-            return stolen;
         } else {
+            stolen = 2;
             target.coins -= 2;
-            player.coins += 2;
-            this.lastAction = ActionType.STEAL;
-            this.lastPlayerId = playerId;
-            this.lastTargetId = targetId;
-            return 2;
         }
+
+        player.coins += stolen;
+
+        await addCoin(playerId, this.gameId, stolen);
+        await addCoin(targetId, this.gameId, -stolen);
+
+        this.lastAction = ActionType.STEAL;
+        this.lastPlayerId = playerId;
+        this.lastTargetId = targetId;
+
+        return stolen;
     }
 
     blockSteal(playerId: string) {
