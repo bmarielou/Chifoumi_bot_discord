@@ -277,14 +277,15 @@ export class Game {
     }
 
     blockSteal(playerId: string): GameResult<Player> {
+
+        if (this.lastAction !== ActionType.STEAL) {
+            return { error: "NO_STEAL" };
+        }
+
         const player = this.players.find(p => p.id === playerId);
 
         if (!player) {
             return { error: "PLAYER_NOT_FOUND" };
-        }
-
-        if (this.lastAction !== ActionType.STEAL) {
-            return { error: "NO_STEAL_TO_BLOCK" };
         }
 
         this.lastAction = ActionType.BLOCK_STEAL;
@@ -396,6 +397,19 @@ export class Game {
             const hasDuke = challengedPlayer.cards.includes(CardType.DUKE);
 
             if (hasDuke) {
+                lostCard = challenger.loseInfluence();
+            } else {
+                lostCard = challengedPlayer.loseInfluence();
+                success = true;
+            }
+        }
+
+        if (this.lastAction === ActionType.BLOCK_STEAL) {
+
+            const hasCaptain = challengedPlayer.cards.includes(CardType.CAPTAIN);
+            const hasAmbassador = challengedPlayer.cards.includes(CardType.AMBASSADOR);
+
+            if (hasCaptain || hasAmbassador) {
                 lostCard = challenger.loseInfluence();
             } else {
                 lostCard = challengedPlayer.loseInfluence();

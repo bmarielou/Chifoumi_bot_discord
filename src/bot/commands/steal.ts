@@ -27,7 +27,10 @@ export async function execute(interaction: any) {
 
     if (handleGameResult(interaction, result)) return;
 
+    const stolen = result.data;
+
     await interaction.reply(
-        `🪙 <@${interaction.user.id}> utilise Capitaine et vole 2 pièces à <@${target.id}> !`
+        `🪙 <@${interaction.user.id}> utilise Capitaine et vole ${stolen} pièce(s) à <@${target.id}> !\n` +
+        `❗ Peut être bloqué avec /block-steal ou contesté avec /challenge`
     );
 }
