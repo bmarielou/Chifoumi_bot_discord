@@ -216,6 +216,48 @@ export class Game {
         };
     }
 
+    async foreignAid(playerId: string): Promise<GameResult<Player>> {
+
+        if (this.state !== GameState.STARTED) {
+            return { error: "GAME_NOT_STARTED" };
+        }
+
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            return { error: "NOT_YOUR_TURN" };
+        }
+
+        currentPlayer.coins += 2;
+
+        await addCoin(playerId, this.gameId, 2);
+
+        this.lastAction = ActionType.FOREIGN_AID;
+        this.lastPlayerId = playerId;
+
+        this.nextTurn();
+
+        return { ok: true, data: currentPlayer };
+    }
+
+    blockForeignAid(playerId: string): GameResult<Player> {
+
+        if (this.lastAction !== ActionType.FOREIGN_AID) {
+            return { error: "NO_FOREIGN_AID" };
+        }
+
+        const player = this.players.find(p => p.id === playerId);
+
+        if (!player) {
+            return { error: "PLAYER_NOT_FOUND" };
+        }
+
+        this.lastAction = ActionType.BLOCK_FOREIGN_AID;
+        this.lastPlayerId = playerId;
+
+        return { ok: true, data: player };
+    }
+
     blockAssassination(playerId: string): GameResult<Player> {
 
         if (this.lastAction !== ActionType.ASSASSINATE) {
@@ -343,6 +385,17 @@ export class Game {
             const hasCard = challengedPlayer.cards.includes(CardType.CAPTAIN);
 
             if (hasCard) {
+                lostCard = challenger.loseInfluence();
+            } else {
+                lostCard = challengedPlayer.loseInfluence();
+                success = true;
+            }
+        }
+
+        if (this.lastAction === ActionType.BLOCK_FOREIGN_AID) {
+            const hasDuke = challengedPlayer.cards.includes(CardType.DUKE);
+
+            if (hasDuke) {
                 lostCard = challenger.loseInfluence();
             } else {
                 lostCard = challengedPlayer.loseInfluence();

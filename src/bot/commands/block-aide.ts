@@ -2,8 +2,8 @@ import { SlashCommandBuilder } from "discord.js";
 import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
-    .setName("contesse")
-    .setDescription("Bloquer un assassinat");
+    .setName("block-aide")
+    .setDescription("Bloquer une aide étrangère avec Duc");
 
 export async function execute(interaction: any) {
 
@@ -16,13 +16,14 @@ export async function execute(interaction: any) {
         });
     }
 
-    const result = game.blockAssassination(interaction.user.id);
+    const result = game.blockForeignAid(interaction.user.id);
 
     if (handleGameResult(interaction, result)) return;
 
     const player = result.data;
 
     await interaction.reply(
-        `🛡️ <@${player.id}> bloque l'assassinat avec Contesse !`
+        `🛑 <@${player.id}> bloque l'aide étrangère avec Duc \n` +
+        `❗ Les autres joueurs peuvent contester avec /challenge`
     );
 }

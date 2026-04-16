@@ -5,5 +5,7 @@ export enum ActionType {
     BLOCK_ASSASSINATION = "block_assassination", // Contessa
     STEAL = "steal", // Captain
     BLOCK_STEAL = "block_steal", // Captain or Ambassador
-    EXCHANGE = "exchange" // Ambassador
+    EXCHANGE = "exchange", // Ambassador
+    FOREIGN_AID = "foreign_aid", // aid foreign
+    BLOCK_FOREIGN_AID = "block_foreign_aid" // Duc
 }
