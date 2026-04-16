@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
     .setName("challenge")
@@ -15,18 +16,19 @@ export async function execute(interaction: any) {
         });
     }
 
-    const result = game.challenge(interaction.user.id);
+    const result = await game.challenge(interaction.user.id);
 
-    if (result?.error) {
-        return interaction.reply({
-            content: result.error,
-            ephemeral: true
-        });
-    }
+    if (handleGameResult(interaction, result)) return;
 
-    if (result.result === "challenge_failed") {
-        await interaction.reply(`❌ Challenge échoué ! <@${result.target.id}> avait bien la carte.`);
+    const data = result.data;
+
+    if (data.success) {
+        await interaction.reply(
+            `🔥 Challenge réussi ! <@${data.challengedPlayerId}> bluffait !`
+        );
     } else {
-        await interaction.reply(`🔥 Challenge réussi ! <@${result.target.id}> bluffait !`);
+        await interaction.reply(
+            `❌ Challenge échoué ! <@${data.challengerId}> perd une influence.`
+        );
     }
 }

@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
     .setName("contesse")
@@ -17,14 +18,11 @@ export async function execute(interaction: any) {
 
     const result = game.blockAssassination(interaction.user.id);
 
-    if (result?.error) {
-        return interaction.reply({
-            content: result.error,
-            ephemeral: true
-        });
-    }
+    if (handleGameResult(interaction, result)) return;
+
+    const player = result.data;
 
     await interaction.reply(
-        `🛡️ <@${result.id}> bloque l'assassinat avec Contessa !`
+        `🛡️ <@${player.id}> bloque l'assassinat avec **Contessa** !`
     );
 }

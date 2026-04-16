@@ -1,22 +1,21 @@
 import { SlashCommandBuilder } from "discord.js";
+import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
-    .setName("assassinate")
+    .setName("assassin")
     .setDescription("Assassiner un joueur (coût : 3 pièces)")
     .addUserOption(option =>
         option.setName("target")
-        .setDescription("Joueur cible")
-        .setRequired(true)
+            .setDescription("Joueur cible")
+            .setRequired(true)
     );
 
 export async function execute(interaction: any) {
 
-    const channelId = interaction.channelId;
     const userId = interaction.user.id;
     const target = interaction.options.getUser("target");
 
-    const gameManager = interaction.client.gameManager;
-    const game = gameManager.getGame(channelId);
+    const game = interaction.client.gameManager.getGame(interaction.channelId);
 
     if (!game) {
         return interaction.reply({
@@ -25,21 +24,26 @@ export async function execute(interaction: any) {
         });
     }
 
-    try {
-
-        const result = game.assassinate(userId, target.id);
-
-        await interaction.reply(
-            `<@${result.attacker.id}> assassine <@${result.target.id}> !\n` +
-            `<@${result.target.id}> perd une influence.`
-        );
-
-    } catch (error: any) {
-
-        await interaction.reply({
-            content: `${error.message}`,
+    if (!target) {
+        return interaction.reply({
+            content: "Cible invalide.",
             ephemeral: true
         });
-
     }
+
+    if (target.id === userId) {
+        return interaction.reply({
+            content: "Tu ne peux pas t'assassiner toi-même.",
+            ephemeral: true
+        });
+    }
+
+    const result = await game.assassinate(userId, target.id);
+
+    if (handleGameResult(interaction, result)) return;
+
+    await interaction.reply(
+        `⚔️ <@${userId}> tente d'assassiner <@${target.id}> !\n` +
+        `⏳ <@${target.id}> peut bloquer avec Contesse et les autres joueurs peuvent challenger.`
+    );
 }

@@ -191,6 +191,7 @@ export class Game {
     }
 
     async assassinate(playerId: string, targetId: string): Promise<GameResult> {
+
         if (this.state !== GameState.STARTED) {
             return { error: "GAME_NOT_STARTED" };
         }
@@ -205,35 +206,20 @@ export class Game {
             return { error: "NOT_ENOUGH_COINS" };
         }
 
-        const target = this.players.find(p => p.id === targetId);
-
-        if (!target) {
-            return { error: "TARGET_NOT_FOUND" };
-        }
-
-        currentPlayer.coins -= 3;
-
-        const lostCard = target.loseInfluence();
-
-        if (!target.isAlive()) {
-            await eliminatePlayer(target.id, this.gameId);
-        }
-
         this.lastAction = ActionType.ASSASSINATE;
         this.lastPlayerId = playerId;
         this.lastTargetId = targetId;
 
-        this.nextTurn();
-
         return {
             ok: true,
-            data: { target, lostCard }
+            data: { targetId }
         };
     }
 
     blockAssassination(playerId: string): GameResult<Player> {
+
         if (this.lastAction !== ActionType.ASSASSINATE) {
-            return { error: "NO_ASSASSINATION_TO_BLOCK" };
+            return { error: "NO_ASSASSINATION" };
         }
 
         const player = this.players.find(p => p.id === playerId);
@@ -290,5 +276,88 @@ export class Game {
         this.nextTurn();
 
         return { ok: true, data: newCards };
+    }
+
+    resolveAssassination() {
+        const target = this.players.find(p => p.id === this.lastTargetId);
+
+        if (!target) return;
+
+        const lostCard = target.loseInfluence();
+
+        this.nextTurn();
+
+        return lostCard;
+    }
+
+    async challenge(challengerId: string): Promise<GameResult<any>> {
+
+        if (!this.lastAction || !this.lastPlayerId) {
+            return { error: "NO_ACTION_TO_CHALLENGE" };
+        }
+
+        const challengedPlayer = this.players.find(p => p.id === this.lastPlayerId);
+        const challenger = this.players.find(p => p.id === challengerId);
+
+        if (!challengedPlayer || !challenger) {
+            return { error: "PLAYER_NOT_FOUND" };
+        }
+
+        let success = false;
+        let lostCard;
+
+        if (this.lastAction === ActionType.TAX) {
+            const hasCard = challengedPlayer.cards.includes(CardType.DUKE);
+
+            if (hasCard) {
+                lostCard = challenger.loseInfluence();
+            } else {
+                lostCard = challengedPlayer.loseInfluence();
+                success = true;
+            }
+        }
+
+        if (this.lastAction === ActionType.ASSASSINATE) {
+            const hasCard = challengedPlayer.cards.includes(CardType.ASSASSIN);
+
+            if (hasCard) {
+                lostCard = challenger.loseInfluence();
+            } else {
+                lostCard = challengedPlayer.loseInfluence();
+                success = true;
+            }
+        }
+
+        if (this.lastAction === ActionType.BLOCK_ASSASSINATION) {
+            const hasCard = challengedPlayer.cards.includes(CardType.CONTESSA);
+
+            if (hasCard) {
+                lostCard = challenger.loseInfluence();
+            } else {
+                lostCard = challengedPlayer.loseInfluence();
+                success = true;
+            }
+        }
+
+        if (this.lastAction === ActionType.STEAL) {
+            const hasCard = challengedPlayer.cards.includes(CardType.CAPTAIN);
+
+            if (hasCard) {
+                lostCard = challenger.loseInfluence();
+            } else {
+                lostCard = challengedPlayer.loseInfluence();
+                success = true;
+            }
+        }
+
+        return {
+            ok: true,
+            data: {
+                success,
+                challengedPlayerId: challengedPlayer.id,
+                challengerId: challenger.id,
+                lostCard
+            }
+        };
     }
 }
