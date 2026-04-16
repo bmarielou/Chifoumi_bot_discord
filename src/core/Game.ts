@@ -58,9 +58,13 @@ export class Game {
         this.deck = new Deck();
 
         for (const player of this.players) {
+            player.cards = [];
+            player.coins = 2;
+
             player.addCard(this.deck.draw()!);
             player.addCard(this.deck.draw()!);
         }
+
 
         return { ok: true, data: true };
     }
