@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
-    .setName("tax")
+    .setName("duc")
     .setDescription("Prendre 3 pièces (Duke)");
 
 export async function execute(interaction: any) {
@@ -23,6 +23,6 @@ export async function execute(interaction: any) {
     const player = result.data;
 
     await interaction.reply(
-        `👑 <@${player.id}> utilise Duke et gagne 3 pièces.\nIl a maintenant ${player.coins} pièces.`
+        `👑 <@${player.id}> utilise Duc et gagne 3 pièces.\nIl a maintenant ${player.coins} pièces.`
     );
 }

@@ -2,8 +2,8 @@ import { SlashCommandBuilder } from 'discord.js';
 import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
-    .setName('exchange')
-    .setDescription('Échanger vos cartes avec le deck');
+    .setName('ambassadeur')
+    .setDescription('Échanger vos cartes avec 2 nouvelles cartes');
 
 export async function execute(interaction: any) {
 
@@ -21,6 +21,6 @@ export async function execute(interaction: any) {
     if (handleGameResult(interaction, result)) return;
 
     await interaction.reply(
-        `🔄 <@${interaction.user.id}> a échangé ses cartes.`
+        `🔄 <@${interaction.user.id}> utilise Ambassadeur et échange ses cartes.`
     );
 }

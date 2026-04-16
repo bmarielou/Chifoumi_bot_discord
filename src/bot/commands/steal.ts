@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from 'discord.js';
 import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
-    .setName('steal')
+    .setName('capitaine')
     .setDescription('Voler 2 pièces à un autre joueur')
     .addUserOption(option =>
         option.setName('target')
@@ -28,6 +28,6 @@ export async function execute(interaction: any) {
     if (handleGameResult(interaction, result)) return;
 
     await interaction.reply(
-        `🪙 <@${interaction.user.id}> vole 2 pièces à <@${target.id}> !`
+        `🪙 <@${interaction.user.id}> utilise Capitaine et vole 2 pièces à <@${target.id}> !`
     );
 }

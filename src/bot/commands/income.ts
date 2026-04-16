@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { handleGameResult } from "../../utils/handleGameResult";
 
 export const data = new SlashCommandBuilder()
-    .setName("income")
+    .setName("revenu")
     .setDescription("Prendre 1 pièce");
 
 export async function execute(interaction: any) {
@@ -23,6 +23,6 @@ export async function execute(interaction: any) {
     const player = result.data;
 
     await interaction.reply(
-        `💰 <@${player.id}> prend 1 pièce.\nIl a maintenant ${player.coins} pièces.`
+        `💰 <@${player.id}> prend son revenu et prend 1 pièce.\nIl a maintenant ${player.coins} pièces.`
     );
 }

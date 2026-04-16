@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
-    .setName("begin")
+    .setName("commencer")
     .setDescription("Lancer la partie");
 
 export async function execute(interaction: any) {

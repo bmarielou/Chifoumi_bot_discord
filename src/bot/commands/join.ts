@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
-    .setName("join")
+    .setName("rejoindre")
     .setDescription("Rejoindre une partie en cours");
 
 export async function execute(interaction: any) {

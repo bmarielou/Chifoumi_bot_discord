@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
-    .setName("block")
-    .setDescription("Bloquer une action");
+    .setName("contesse")
+    .setDescription("Bloquer un assassinat");
 
 export async function execute(interaction: any) {
 
