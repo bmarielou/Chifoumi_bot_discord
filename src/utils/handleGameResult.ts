@@ -1,8 +1,24 @@
 export function handleGameResult(interaction: any, result: any): boolean {
 
-    if (!result) return true;
+    if (!result) return false;
 
-    if (typeof result === "object" && "error" in result) {
+    if (result.error === "MUST_COUP") {
+        interaction.reply({
+            content: "💥 Vous avez 10 pièces ou plus, vous devez utiliser /coup.",
+            ephemeral: true
+        });
+        return true;
+    }
+
+    if (result.error === "ACTION_NOT_CHALLENGEABLE") {
+        interaction.reply({
+            content: "❌ Cette action ne peut pas être contestée.",
+            ephemeral: true
+        });
+        return true;
+    }
+
+    if (result.error) {
 
         let message = "⛔ Erreur inconnue.";
 

@@ -116,6 +116,10 @@ export class Game {
             return { error: "NOT_YOUR_TURN" };
         }
 
+        if (currentPlayer.coins >= 10) {
+            return { error: "MUST_COUP" };
+        }
+
         currentPlayer.coins += 1;
 
         await addCoin(playerId, this.gameId, 1);
@@ -134,6 +138,10 @@ export class Game {
 
         if (currentPlayer.id !== playerId) {
             return { error: "NOT_YOUR_TURN" };
+        }
+
+        if (currentPlayer.coins >= 10) {
+            return { error: "MUST_COUP" };
         }
 
         currentPlayer.coins += 3;
@@ -158,6 +166,10 @@ export class Game {
 
         if (currentPlayer.id !== playerId) {
             return { error: "NOT_YOUR_TURN" };
+        }
+
+        if (currentPlayer.coins >= 10) {
+            return { error: "MUST_COUP" };
         }
 
         const player = this.players.find(p => p.id === playerId);
@@ -206,6 +218,10 @@ export class Game {
             return { error: "NOT_ENOUGH_COINS" };
         }
 
+        if (currentPlayer.coins >= 10) {
+            return { error: "MUST_COUP" };
+        }
+
         this.lastAction = ActionType.ASSASSINATE;
         this.lastPlayerId = playerId;
         this.lastTargetId = targetId;
@@ -226,6 +242,10 @@ export class Game {
 
         if (currentPlayer.id !== playerId) {
             return { error: "NOT_YOUR_TURN" };
+        }
+
+        if (currentPlayer.coins >= 10) {
+            return { error: "MUST_COUP" };
         }
 
         currentPlayer.coins += 2;
@@ -333,7 +353,57 @@ export class Game {
         return lostCard;
     }
 
+    async coup(playerId: string, targetId: string): Promise<GameResult<any>> {
+
+        if (this.state !== GameState.STARTED) {
+            return { error: "GAME_NOT_STARTED" };
+        }
+
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            return { error: "NOT_YOUR_TURN" };
+        }
+
+        if (currentPlayer.coins < 7) {
+            return { error: "NOT_ENOUGH_COINS" };
+        }
+
+        const target = this.players.find(p => p.id === targetId);
+
+        if (!target) {
+            return { error: "TARGET_NOT_FOUND" };
+        }
+
+        currentPlayer.coins -= 7;
+
+        const lostCard = target.loseInfluence();
+
+        if (!target.isAlive()) {
+            await eliminatePlayer(target.id, this.gameId);
+        }
+
+        this.lastAction = ActionType.COUP;
+        this.lastPlayerId = playerId;
+        this.lastTargetId = targetId;
+
+        this.nextTurn();
+
+        return {
+            ok: true,
+            data: {
+                attacker: currentPlayer,
+                target,
+                lostCard
+            }
+        };
+    }
+
     async challenge(challengerId: string): Promise<GameResult<any>> {
+
+        if (this.lastAction === ActionType.COUP) {
+            return { error: "ACTION_NOT_CHALLENGEABLE" };
+        }
 
         if (!this.lastAction || !this.lastPlayerId) {
             return { error: "NO_ACTION_TO_CHALLENGE" };

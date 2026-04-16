@@ -7,5 +7,6 @@ export enum ActionType {
     BLOCK_STEAL = "block_steal", // Captain or Ambassador
     EXCHANGE = "exchange", // Ambassador
     FOREIGN_AID = "foreign_aid", // aid foreign
-    BLOCK_FOREIGN_AID = "block_foreign_aid" // Duc
+    BLOCK_FOREIGN_AID = "block_foreign_aid", // Duc
+    COUP = "coup" // Coup
 }

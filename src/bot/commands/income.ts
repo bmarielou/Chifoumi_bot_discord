@@ -11,7 +11,7 @@ export async function execute(interaction: any) {
 
     if (!game) {
         return interaction.reply({
-            content: "Aucune partie n'a commencé.",
+            content: "Aucune partie en cours.",
             ephemeral: true
         });
     }
