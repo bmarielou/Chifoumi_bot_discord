@@ -55,7 +55,7 @@ export class GameManager {
         this.games.delete(channelId);
     }
 
-    getAllGames(): Game[] {
+    getAllGames(): GameEngine[] {
         return Array.from(this.games.values());
     }
 }
