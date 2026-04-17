@@ -128,14 +128,14 @@ export class GameEngine {
               return {
                   result: "challenge_failed",
                   lostCard,
-                  message: `${challenger.id} a perdu une influence ! (Duke confirmé)`
+                  message: `<@${challenger.id}> a perdu une influence ! (Duke confirmé)`
               };
           } else {
               const lostCard = challengedPlayer.loseInfluence();
               return {
                   result: "challenge_success",
                   lostCard,
-                  message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                  message: `<@${challengedPlayer.id}> bluffait et a perdu une influence !`
               };
           }
       }
@@ -149,14 +149,14 @@ export class GameEngine {
               return {
                   result: "challenge_failed",
                   lostCard,
-                  message: `${challenger.id} a perdu une influence ! (Assassin confirmé)`
+                  message: `<@${challenger.id}> a perdu une influence ! (Assassin confirmé)`
               };
           } else {
               const lostCard = challengedPlayer.loseInfluence();
               return {
                   result: "challenge_success",
                   lostCard,
-                  message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                  message: `<@${challengedPlayer.id}> bluffait et a perdu une influence !`
               };
           }
       }
@@ -170,14 +170,14 @@ export class GameEngine {
               return {
                   result: "challenge_failed",
                   lostCard,
-                  message: `${challenger.id} a perdu une influence ! (Contessa confirmée)`
+                  message: `<@${challenger.id}> a perdu une influence ! (Contessa confirmée)`
               };
           } else {
               const lostCard = challengedPlayer.loseInfluence();
               return {
                   result: "challenge_success",
                   lostCard,
-                  message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                  message: `<@${challengedPlayer.id}> bluffait et a perdu une influence !`
               };
           }
       }
@@ -192,7 +192,7 @@ export class GameEngine {
               return {
                   result: "challenge_failed",
                   lostCard,
-                  message: `${challenger.id} a perdu une influence ! (Captain confirmé)`
+                  message: `<@${challenger.id}> a perdu une influence ! (Captain confirmé)`
               };
           } else {
               // Challenge réussi → joueur bluffeur perd une carte
@@ -200,7 +200,7 @@ export class GameEngine {
               return {
                   result: "challenge_success",
                   lostCard,
-                  message: `${challengedPlayer.id} bluffait et a perdu une influence !`
+                  message: `<@${challengedPlayer.id}> bluffait et a perdu une influence !`
               };
           }
       }

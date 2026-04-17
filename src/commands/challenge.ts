@@ -5,7 +5,8 @@ export class ChallengeCommand extends Command {
     super(context, {
       ...options,
       name: 'challenge',
-      description: 'Défier un joueur (coût : 2 pièces)',
+      description: 'Contester la dernière action jouée',
+      preconditions: ['checkGameActive']
     });
   }
 
@@ -14,54 +15,28 @@ export class ChallengeCommand extends Command {
       builder
         .setName(this.name)
         .setDescription(this.description)
-        .addUserOption(option =>
-            option.setName("target")
-            .setDescription("Joueur cible")
-            .setRequired(true)
-        )
     );
   }
 
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
-    const target = interaction.options.getUser("target")!;
     const gameManager = this.container.GameManager;
-    const game = gameManager.getGame(channelId);
+    const game = gameManager.getGame(channelId)!;
 
-    if (!game) {
-        return interaction.reply({
-          content: "Aucune partie en cours dans ce salon.",
-          ephemeral: true
-        })
+    try {
+      const result = game.challenge(userId);
+
+      if (result.result === 'challenge_success') {
+        await interaction.reply(`🔥 Challenge réussi ! ${result.message}`);
+      } else {
+        await interaction.reply(`❌ Challenge échoué ! ${result.message}`);
+      }
+    } catch (error: any) {
+      await interaction.reply({
+        content: `⛔ ${error.message}`,
+        ephemeral: true
+      });
     }
-    // TODO: A IMPLEMENTER 
-    // try {
-
-    //     const result = game.challenge(userId);
-
-    //     if (result.result === "challenge_failed") {
-
-    //         await interaction.reply(
-    //             `Challenge échoué ! <@${result.player.id}> avait bien **Duke**.`
-    //         );
-
-    //     } else {
-
-    //         await interaction.reply(
-    //             `Challenge réussi ! <@${result.player.id}> bluffait !`
-    //         );
-
-    //     }
-
-    // } catch (error: any) {
-
-    //     await interaction.reply({
-    //         content: `${error.message}`,
-    //         ephemeral: true
-    //     });
-
-    // }
-    
   }
 }
