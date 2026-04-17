@@ -25,6 +25,13 @@ export class Game {
 
     gameId!: number;
 
+    pendingAction: boolean = false;
+    passVotes: Set<string> = new Set();
+    actionResolved: boolean = false;
+
+    assassinationBlocked: boolean = false;
+    lastBlockerId: string | null = null;
+
     constructor(channelId: string, creatorId: string) {
         this.channelId = channelId;
         this.creatorId = creatorId;
@@ -105,6 +112,43 @@ export class Game {
         return null;
     }
 
+    async pass(playerId: string): Promise<GameResult> {
+
+        if (!this.pendingAction) {
+            return { error: "NO_PENDING_ACTION" };
+        }
+
+        if (playerId === this.lastPlayerId) {
+            return { error: "CANNOT_PASS" };
+        }
+
+        if (this.passVotes.has(playerId)) {
+            return { error: "ALREADY_PASSED" };
+        }
+
+        this.passVotes.add(playerId);
+
+        const alivePlayers = this.players.filter(p => p.isAlive());
+
+        const requiredVotes = alivePlayers.length - 1;
+
+        if (this.passVotes.size >= requiredVotes) {
+
+            await this.resolveLastAction();
+
+            this.actionResolved = true;
+            this.pendingAction = false;
+            this.passVotes.clear();
+            this.lastAction = null;
+            this.lastPlayerId = null;
+            this.lastTargetId = null;
+
+            return { ok: true, data: "RESOLVED" };
+        }
+
+        return { ok: true, data: "PASSED" };
+    }
+
     async income(playerId: string): Promise<GameResult<Player>> {
         if (this.state !== GameState.STARTED) {
             return { error: "GAME_NOT_STARTED" };
@@ -116,12 +160,15 @@ export class Game {
             return { error: "NOT_YOUR_TURN" };
         }
 
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         if (currentPlayer.coins >= 10) {
             return { error: "MUST_COUP" };
         }
 
-        currentPlayer.coins += 1;
-
+        currentPlayer.coins +=1;
         await addCoin(playerId, this.gameId, 1);
 
         this.nextTurn();
@@ -140,24 +187,24 @@ export class Game {
             return { error: "NOT_YOUR_TURN" };
         }
 
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         if (currentPlayer.coins >= 10) {
             return { error: "MUST_COUP" };
         }
 
-        currentPlayer.coins += 3;
-
-        await addCoin(playerId, this.gameId, 3);
-
         this.lastAction = ActionType.TAX;
         this.lastPlayerId = playerId;
 
-        this.nextTurn();
+        this.pendingAction = true;
+        this.passVotes.clear();
 
         return { ok: true, data: currentPlayer };
     }
 
-    async steal(playerId: string, targetId: string): Promise<GameResult<number>> {
-
+    async steal(playerId: string, targetId: string): Promise<GameResult> {
         if (this.state !== GameState.STARTED) {
             return { error: "GAME_NOT_STARTED" };
         }
@@ -168,38 +215,24 @@ export class Game {
             return { error: "NOT_YOUR_TURN" };
         }
 
-        if (currentPlayer.coins >= 10) {
-            return { error: "MUST_COUP" };
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
         }
 
-        const player = this.players.find(p => p.id === playerId);
         const target = this.players.find(p => p.id === targetId);
 
-        if (!player || !target) {
+        if (!target) {
             return { error: "PLAYER_NOT_FOUND" };
-        }
-
-        if (target.coins <= 0) {
-            return { error: "NO_COINS_TO_STEAL" };
-        }
-
-        const stolen = target.coins < 2 ? target.coins : 2;
-
-        target.coins -= stolen;
-        player.coins += stolen;
-
-        if (stolen > 0) {
-            await addCoin(playerId, this.gameId, stolen);
-            await addCoin(targetId, this.gameId, -stolen);
         }
 
         this.lastAction = ActionType.STEAL;
         this.lastPlayerId = playerId;
         this.lastTargetId = targetId;
 
-        this.nextTurn();
+        this.pendingAction = true;
+        this.passVotes.clear();
 
-        return { ok: true, data: stolen };
+        return { ok: true, data: true };
     }
 
     async assassinate(playerId: string, targetId: string): Promise<GameResult> {
@@ -214,6 +247,10 @@ export class Game {
             return { error: "NOT_YOUR_TURN" };
         }
 
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         if (currentPlayer.coins < 3) {
             return { error: "NOT_ENOUGH_COINS" };
         }
@@ -222,13 +259,21 @@ export class Game {
             return { error: "MUST_COUP" };
         }
 
+        const target = this.players.find(p => p.id === targetId);
+        if (!target) {
+            return { error: "TARGET_NOT_FOUND" };
+        }
+
         this.lastAction = ActionType.ASSASSINATE;
         this.lastPlayerId = playerId;
         this.lastTargetId = targetId;
 
+        this.pendingAction = true;
+        this.passVotes.clear();
+
         return {
             ok: true,
-            data: { targetId }
+            data: true
         };
     }
 
@@ -244,18 +289,19 @@ export class Game {
             return { error: "NOT_YOUR_TURN" };
         }
 
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         if (currentPlayer.coins >= 10) {
             return { error: "MUST_COUP" };
         }
 
-        currentPlayer.coins += 2;
-
-        await addCoin(playerId, this.gameId, 2);
-
         this.lastAction = ActionType.FOREIGN_AID;
         this.lastPlayerId = playerId;
 
-        this.nextTurn();
+        this.pendingAction = true;
+        this.passVotes.clear();
 
         return { ok: true, data: currentPlayer };
     }
@@ -272,8 +318,15 @@ export class Game {
             return { error: "PLAYER_NOT_FOUND" };
         }
 
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         this.lastAction = ActionType.BLOCK_FOREIGN_AID;
         this.lastPlayerId = playerId;
+
+        this.pendingAction = true;
+        this.passVotes.clear();
 
         return { ok: true, data: player };
     }
@@ -290,8 +343,8 @@ export class Game {
             return { error: "PLAYER_NOT_FOUND" };
         }
 
-        this.lastAction = ActionType.BLOCK_ASSASSINATION;
-        this.lastPlayerId = playerId;
+        this.assassinationBlocked = true;
+        this.lastBlockerId = playerId;
 
         return { ok: true, data: player };
     }
@@ -308,49 +361,138 @@ export class Game {
             return { error: "PLAYER_NOT_FOUND" };
         }
 
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         this.lastAction = ActionType.BLOCK_STEAL;
         this.lastPlayerId = playerId;
+
+        this.pendingAction = true;
+        this.passVotes.clear();
 
         return { ok: true, data: player };
     }
 
-    exchange(playerId: string): GameResult<CardType[]> {
+    exchange(playerId: string): GameResult {
+
+        if (this.state !== GameState.STARTED) {
+            return { error: "GAME_NOT_STARTED" };
+        }
+
+        const currentPlayer = this.getCurrentPlayer();
+
+        if (currentPlayer.id !== playerId) {
+            return { error: "NOT_YOUR_TURN" };
+        }
+
+        if (this.pendingAction) {
+            return { error: "ACTION_PENDING" };
+        }
+
         const player = this.players.find(p => p.id === playerId);
 
         if (!player) {
             return { error: "PLAYER_NOT_FOUND" };
         }
 
-        const oldCards = [...player.cards];
-        const newCards: CardType[] = [];
-
-        oldCards.forEach(card => this.deck.returnCard(card));
-
-        for (let i = 0; i < oldCards.length; i++) {
-            const drawn = this.deck.draw();
-            if (drawn) newCards.push(drawn);
-        }
-
-        player.cards = newCards;
-
         this.lastAction = ActionType.EXCHANGE;
         this.lastPlayerId = playerId;
 
-        this.nextTurn();
+        this.pendingAction = true;
+        this.passVotes.clear();
 
-        return { ok: true, data: newCards };
+        return { ok: true, data: true };
     }
 
-    resolveAssassination() {
-        const target = this.players.find(p => p.id === this.lastTargetId);
+    async resolveLastAction(): Promise<void> {
 
-        if (!target) return;
+        if (!this.lastAction || !this.lastPlayerId) return;
 
-        const lostCard = target.loseInfluence();
+        const player = this.players.find(p => p.id === this.lastPlayerId);
+
+        if (!player) return;
+
+        switch (this.lastAction) {
+
+            case ActionType.TAX:
+                player.coins += 3;
+                await addCoin(player.id, this.gameId, 3);
+                break;
+
+            case ActionType.INCOME:
+                player.coins += 1;
+                await addCoin(player.id, this.gameId, 1);
+                break;
+
+            case ActionType.FOREIGN_AID:
+                player.coins += 2;
+                await addCoin(player.id, this.gameId, 2);
+                break;
+
+            case ActionType.STEAL: {
+                const target = this.players.find(p => p.id === this.lastTargetId);
+
+                if (target) {
+                    const stolen = target.coins < 2 ? target.coins : 2;
+
+                    target.coins -= stolen;
+                    player.coins += stolen;
+
+                    await addCoin(player.id, this.gameId, stolen);
+                    await addCoin(target.id, this.gameId, -stolen);
+                }
+
+                break;
+            }
+
+            case ActionType.ASSASSINATE: {
+
+                if (this.assassinationBlocked) {
+                    this.assassinationBlocked = false;
+                    this.lastBlockerId = null;
+                    break;
+                }
+
+                const target = this.players.find(p => p.id === this.lastTargetId);
+
+                if (target && player) {
+                    player.coins -= 3;
+
+                    const lostCard = target.loseInfluence();
+
+                    if (!target.isAlive()) {
+                        await eliminatePlayer(target.id, this.gameId);
+                    }
+                }
+
+                break;
+            }
+
+            case ActionType.EXCHANGE: {
+                const oldCards = [...player.cards];
+                const newCards: CardType[] = [];
+
+                oldCards.forEach(card => this.deck.returnCard(card));
+
+                for (let i = 0; i < oldCards.length; i++) {
+                    const drawn = this.deck.draw();
+                    if (drawn) newCards.push(drawn);
+                }
+
+                player.cards = newCards;
+                break;
+            }
+        }
+
+        this.pendingAction = false;
+        this.passVotes.clear();
+
+        this.lastAction = null;
+        this.lastPlayerId = null;
+        this.lastTargetId = null;
 
         this.nextTurn();
-
-        return lostCard;
     }
 
     async coup(playerId: string, targetId: string): Promise<GameResult<any>> {
@@ -475,7 +617,6 @@ export class Game {
         }
 
         if (this.lastAction === ActionType.BLOCK_STEAL) {
-
             const hasCaptain = challengedPlayer.cards.includes(CardType.CAPTAIN);
             const hasAmbassador = challengedPlayer.cards.includes(CardType.AMBASSADOR);
 

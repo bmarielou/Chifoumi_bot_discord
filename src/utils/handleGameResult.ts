@@ -34,6 +34,9 @@ export function handleGameResult(interaction: any, result: any): boolean {
             case "NO_GAME":
                 message = "⛔ Aucune partie en cours.";
                 break;
+            case "CANNOT_PASS":
+                message = "⛔ Vous ne pouvez pas passer votre propre action.";
+                break;
         }
 
         interaction.reply({
