@@ -1,10 +1,13 @@
-import { Game } from "./Game";
+import { GameEngine } from "../engine/GameEngine";
 
 export class GameManager {
 
-    games: Map<string, Game> = new Map();
+    currentGame: GameEngine | null = null;
+    games: Map<string, GameEngine> = new Map();
+    
 
-    createGame(channelId: string, creatorId: string): Game {
+    //Create new game in canal
+    public createGame(channelId: string, creatorId: string): GameEngine {
 
         const existingGame = this.games.get(channelId);
 
@@ -13,7 +16,7 @@ export class GameManager {
             throw new Error("Une partie est déjà en cours dans ce salon.");
         }
 
-        const game = new Game(channelId, creatorId);
+        const game = new GameEngine(channelId, creatorId);  //ADD creator (rappel)
 
         // creator auto join
         game.addPlayer(creatorId);
@@ -23,15 +26,18 @@ export class GameManager {
         return game;
     }
 
-    getGame(channelId: string): Game | undefined {
+    //Recup game already exists
+    public getGame(channelId: string): GameEngine | undefined {
         return this.games.get(channelId);
     }
 
-    deleteGame(channelId: string): void {
+    //delete game 
+    public deleteGame(channelId: string): void {
         this.games.delete(channelId);
     }
 
-    hasGame(channelId: string): boolean {
+    //Check if game already exists
+    public hasGame(channelId: string): boolean {
         return this.games.has(channelId);
     }
 

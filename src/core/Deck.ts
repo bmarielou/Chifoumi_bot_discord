@@ -1,4 +1,4 @@
-import { CardType } from "./Cards";
+import { CardType } from "../types/Cards";
 
 export class Deck {
 
