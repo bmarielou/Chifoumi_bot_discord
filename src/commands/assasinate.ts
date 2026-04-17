@@ -1,4 +1,6 @@
 import { Command } from '@sapphire/framework';
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
+const path = require('path');
 
 export class AssassinateCommand extends Command {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -29,13 +31,18 @@ export class AssassinateCommand extends Command {
     const target = interaction.options.getUser("target")!;
     const gameManager = this.container.GameManager;
     const game = gameManager.getGame(channelId)!;
+    const imagePath = path.join(process.cwd(), 'assets/Assassiner_assasin.png');
+    const file = new AttachmentBuilder(imagePath);
 
     try {
         const result = game.assassinate(userId, target.id);
-        await interaction.reply(
-            `<@${result.attacker.id}> assassine <@${result.target.id}> !\n` +
-            `<@${result.target.id}> perd une influence.`
-        );
+        await interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setDescription(`<@${result.attacker.id}> assassine <@${result.target.id}> !\n` + `<@${result.target.id}> perd une influence.`)
+          ],
+          files: [file]
+        });
 
     } catch (error: any) {
 

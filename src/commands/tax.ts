@@ -1,4 +1,6 @@
 import { Command } from '@sapphire/framework';
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
+const path = require('path');
 
 export class TaxCommand extends Command {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -23,12 +25,18 @@ export class TaxCommand extends Command {
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
     const game = gameManager.getGame(channelId)!;
+    const imagePath = path.join(process.cwd(), 'assets/duc_taxes.png');
+    const file = new AttachmentBuilder(imagePath);
 
     try {
         const player = game.tax(userId);
-        await interaction.reply(
-            `<@${player.id}> utilise **Duke** et gagne 3 pièces.\nIl a maintenant ${player.coins} pièces.`
-        );
+        await interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setDescription(`<@${player.id}> utilise **Duke** et gagne 3 pièces.\nIl a maintenant ${player.coins} pièces.`)
+          ],
+          files: [file]
+        });
 
     } catch (error: any) {
 

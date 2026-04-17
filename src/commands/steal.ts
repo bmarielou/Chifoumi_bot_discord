@@ -1,4 +1,6 @@
 import { Command } from '@sapphire/framework';
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
+const path = require('path');
 
 export class StealCommand extends Command {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -29,11 +31,19 @@ export class StealCommand extends Command {
     const gameManager = this.container.GameManager;
     const game = gameManager.getGame(channelId)!;
     const target = interaction.options.getUser('target')!;
+    const imagePath = path.join(process.cwd(), 'assets/extorquer_capitaine.png');
+    const file = new AttachmentBuilder(imagePath);
 
     try {
         // use a variable game already check
         const stolen = game.steal(userId, target.id);
-        await interaction.reply(`<@${userId}> a volé ${stolen} pièces à <@${target.id}> !`);
+        await interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setDescription(`<@${userId}> a volé ${stolen} pièces à <@${target.id}> !`)
+          ],
+          files: [file]
+        });
     } catch (err: any) {
         await interaction.reply({ content: err.message, ephemeral: true });
     }

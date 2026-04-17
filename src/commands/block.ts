@@ -1,4 +1,6 @@
 import { Command } from '@sapphire/framework';
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
+const path = require('path');
 
 export class BlockCommand extends Command {
   public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -23,15 +25,20 @@ export class BlockCommand extends Command {
     const userId = interaction.user.id;
     const gameManager = this.container.GameManager;
     const game = gameManager.getGame(channelId);
+    const imagePath = path.join(process.cwd(), 'assets/bloquer_assassinat_comtesse.png');
+    const file = new AttachmentBuilder(imagePath);
 
     try {
         const player = game!.blockAssassination(userId);
-        await interaction.reply(
-            `<@${player.id}> bloque l'assassinat avec **Contessa** !`
-        );
+        await interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setDescription(`<@${player.id}> bloque l'assassinat avec **Contessa** !`)
+          ],
+          files: [file]
+        });
 
     } catch (error: any) {
-
         await interaction.reply({
             content: `${error.message}`,
             ephemeral: true

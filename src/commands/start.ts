@@ -6,7 +6,6 @@ export class StartCommand extends Command {
       ...options,
       name: 'start',
       description: 'Créer une nouvelle partie de Coup',
-      preconditions: ['checkGameActive']
     });
   }
 
